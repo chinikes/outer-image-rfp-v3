@@ -6,11 +6,12 @@ import Link from "next/link";
 
 function StatusBadge({ status }) {
   const config = {
-    Received: "bg-neutral-200 text-neutral-600",
-    Parsing: "bg-neutral-300 text-neutral-700",
-    Drafting: "bg-neutral-400 text-white",
-    "Ready for Review": "bg-neutral-800 text-white",
+    Received: "bg-blue-100 text-blue-700",
+    Parsing: "bg-amber-100 text-amber-700",
+    Drafting: "bg-purple-100 text-purple-700",
+    "Ready for Review": "bg-emerald-100 text-emerald-700",
     Finalized: "bg-black text-white",
+    Error: "bg-red-100 text-red-700",
   };
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${config[status] || config["Received"]}`}>
