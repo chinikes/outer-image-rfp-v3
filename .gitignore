@@ -18,3 +18,5 @@ npm-debug.log*
 # misc
 .DS_Store
 *.tgz
+.vercel
+.env*.local

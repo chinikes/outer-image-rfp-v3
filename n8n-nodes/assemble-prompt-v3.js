@@ -118,7 +118,8 @@ Generate a complete proposal response for the following RFP using the standard p
 Issuer: ${rfp.issuer || 'Unknown'}
 Project Title: ${rfp.projectTitle || 'Unknown'}
 Submission Deadline: ${rfp.submissionDeadline || 'TBD'}
-Service Line: ${serviceLine}${industry ? `\nIndustry: ${industry}` : ''}
+Service Line: ${serviceLine}${industry ? `\nIndustry/Client Tier: ${industry}` : ''}
+IMPORTANT CONTEXT: The user has categorized this RFP as Service Line="${serviceLine}"${industry ? ` and Industry="${industry}"` : ''}. These selections MUST heavily influence the entire proposal — tone, project references, team emphasis, and approach should all be tailored to this specific service type${industry ? ` and ${industry.toLowerCase()} sector` : ''}.
 Scope of Work: ${truncate(rfp.scopeOfWork, 1500)}
 Evaluation Criteria: ${truncate(rfp.evaluationCriteria, 500)}
 Required Certifications: ${rfp.requiredCertifications || 'None specified'}
@@ -160,12 +161,12 @@ Generate the proposal in markdown format. Start with ## 1. Firm Overview and con
 
 ## 1. Firm Overview
 Write exactly 3 paragraphs:
-- Paragraph 1: Use the Firm Overview boilerplate as the foundation (adapt, don't copy verbatim)
-- Paragraph 2: Expand on Outer Image's capabilities relevant to this RFP's service line (${serviceLine})
-- Paragraph 3: ONE closing paragraph that references ONLY projects from the PORTFOLIO PROJECTS data above that match the client's sector.${industry ? ` The user has categorized this RFP as "${industry}" — prioritize portfolio projects in that industry.` : ' If the client is corporate/commercial, reference only corporate projects. If healthcare, only healthcare. If government/municipal, only government projects.'} Do NOT mix sectors. NEVER mention a client from CLIENT REFERENCES as a project — references and portfolio are separate data sources.
+- Paragraph 1: Use the Firm Overview boilerplate as the foundation (adapt, don't copy verbatim). Frame Outer Image's introduction through the lens of the ${serviceLine} service line${industry ? ` and its deep experience in the ${industry} sector` : ''}.
+- Paragraph 2: Expand on Outer Image's capabilities specifically relevant to ${serviceLine} work${industry ? ` for ${industry} clients` : ''}. Emphasize experience, certifications, and team strengths that matter most to ${industry || 'this type of'} client${industry === 'Government' ? ' (e.g., compliance, code requirements, public-facing durability, WBE/MBE certification)' : industry === 'Corporate' ? ' (e.g., brand alignment, aesthetic quality, stakeholder coordination, high-profile environments)' : industry === 'Non-Profit' ? ' (e.g., cost-effectiveness, mission-driven design, community impact, budget sensitivity)' : industry === 'Health' ? ' (e.g., ADA compliance, wayfinding clarity, patient experience, regulatory standards, durability)' : 's'}.
+- Paragraph 3: ONE closing paragraph that references ONLY projects from the PORTFOLIO PROJECTS data above whose Client Tier matches "${industry || 'the RFP sector'}". ONLY mention projects that have a matching Client Tier — do NOT mix sectors. If fewer than 2 matching projects exist, broaden slightly but note the relevance. NEVER mention a client from CLIENT REFERENCES as a project — references and portfolio are separate data sources.
 
 ## 2. Project Overview
-Write 2-3 paragraphs tailored specifically to the RFP issuer explaining why Outer Image is uniquely positioned for this project. Reference specific details from the RFP scope of work and any supplementary documents. Address evaluation criteria directly. Do NOT invent specific internal processes, proprietary methodologies, or named QA/QC procedures. Keep capability claims grounded in the data provided (team experience, portfolio projects, certifications).
+Write 2-3 paragraphs tailored specifically to the RFP issuer explaining why Outer Image is uniquely positioned for this project. Frame the response around Outer Image's ${serviceLine} capabilities${industry ? ` and proven track record with ${industry} clients` : ''}. Reference specific details from the RFP scope of work and any supplementary documents. Address evaluation criteria directly.${industry ? ` Highlight how Outer Image's experience serving ${industry} organizations translates directly to this project's needs.` : ''} Do NOT invent specific internal processes, proprietary methodologies, or named QA/QC procedures. Keep capability claims grounded in the data provided (team experience, portfolio projects, certifications).
 
 ## 3. Corporate Information
 
@@ -238,7 +239,12 @@ CRITICAL RULES FOR PROJECT EXPERIENCE:
 - ONLY use projects listed in the PORTFOLIO PROJECTS section above. Do NOT invent, fabricate, or hallucinate any projects.
 - NEVER duplicate a project — each project may appear ONLY ONCE in section 5.03.
 - If a field value is not provided in the portfolio data, write "[Not provided]" — do NOT make up values.
-- Prioritize projects whose Service Line matches the RFP${industry ? ` and whose client sector matches "${industry}"` : ''}, but include projects from other service lines or sectors if fewer than 5 exact matches exist.
+- PRIORITY ORDER for selecting projects:
+  1. FIRST: Projects matching BOTH Service Line "${serviceLine}" AND Client Tier "${industry || 'any'}"
+  2. SECOND: Projects matching Client Tier "${industry || 'any'}" (any service line)
+  3. THIRD: Projects matching Service Line "${serviceLine}" (any client tier)
+  4. LAST: Any remaining projects to fill up to 5 total
+- The goal is to demonstrate relevant ${industry || 'sector'} experience through project selection. A proposal for a ${industry || 'specific sector'} client should showcase primarily ${industry || 'similar'} projects.
 
 === ZERO-HALLUCINATION POLICY (APPLIES TO THE ENTIRE PROPOSAL) ===
 These rules override everything else and apply to EVERY section — Firm Overview, Project Overview, Project Approach, Project Experience, and all others.
