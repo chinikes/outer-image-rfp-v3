@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="240" height="80">
+  <rect width="240" height="80" fill="#000"/>
+  <text x="120" y="36" text-anchor="middle" font-family="Arial Black, Impact, Helvetica, sans-serif" font-weight="900" font-size="28" fill="#fff" letter-spacing="4">OUTER</text>
+  <text x="120" y="66" text-anchor="middle" font-family="Arial Black, Impact, Helvetica, sans-serif" font-weight="900" font-size="28" fill="#fff" letter-spacing="4">IMAGE</text>
+</svg>

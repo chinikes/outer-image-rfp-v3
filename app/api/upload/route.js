@@ -21,7 +21,7 @@ const MAX_FILES = 10;
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { primaryIndex, files } = body;
+    const { primaryIndex, files, industry, projectType } = body;
 
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -55,6 +55,8 @@ export async function POST(request) {
     const record = await createRfpRecord({
       rfpName: primaryName,
       fileUrl: primaryFile.url,
+      industry: industry || null,
+      projectType: projectType || null,
     });
 
     // ---- Determine primary file type and extract text if Word doc ----
@@ -102,6 +104,8 @@ export async function POST(request) {
       extractedText: extractedDocxText,
       supplementaryFiles,
       fileCount: files.length,
+      industry: industry || null,
+      projectType: projectType || null,
     });
 
     if (!webhookResult.success) {

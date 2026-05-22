@@ -5,6 +5,9 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap");
 
 :root {
+  --brand-black: #000000;
+  --brand-dark: #111111;
+  --brand-gray: #333333;
   --brand-navy: #0f2027;
   --brand-navy-mid: #1a3040;
   --brand-navy-light: #203a43;
@@ -17,8 +20,8 @@
 
 body {
   font-family: "DM Sans", system-ui, sans-serif;
-  background-color: #f8fafb;
-  color: #2d3748;
+  background-color: #fafafa;
+  color: #1a1a1a;
 }
 
 @keyframes spin {

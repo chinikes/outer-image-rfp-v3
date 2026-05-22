@@ -33,6 +33,8 @@ function capList(arr, max) {
 // ---- Extract key data ----
 const rfp = merged.extractedData || {};
 const serviceLine = merged.serviceLine || 'Design + Fabrication';
+const industry = merged.industry || '';
+const projectType = merged.projectType || '';
 
 // ---- Build team bios section (capped at 8, truncated) ----
 const teamSection = capList(merged.teamBios, 8).map(t =>
@@ -117,7 +119,7 @@ Generate a complete proposal response for the following RFP using the standard p
 Issuer: ${rfp.issuer || 'Unknown'}
 Project Title: ${rfp.projectTitle || 'Unknown'}
 Submission Deadline: ${rfp.submissionDeadline || 'TBD'}
-Service Line: ${serviceLine}
+Service Line: ${serviceLine}${industry ? `\nIndustry: ${industry}` : ''}${projectType ? `\nProject Type: ${projectType}` : ''}
 Scope of Work: ${truncate(rfp.scopeOfWork, 1500)}
 Evaluation Criteria: ${truncate(rfp.evaluationCriteria, 500)}
 Required Certifications: ${rfp.requiredCertifications || 'None specified'}
@@ -161,7 +163,7 @@ Generate the proposal in markdown format. Start with ## 1. Firm Overview and con
 Write exactly 3 paragraphs:
 - Paragraph 1: Use the Firm Overview boilerplate as the foundation (adapt, don't copy verbatim)
 - Paragraph 2: Expand on Outer Image's capabilities relevant to this RFP's service line (${serviceLine})
-- Paragraph 3: ONE closing paragraph that references ONLY projects from the PORTFOLIO PROJECTS data above that match the client's sector. If the client is corporate/commercial, reference only corporate projects. If healthcare, only healthcare. If government/municipal, only government projects. Do NOT mix sectors. NEVER mention a client from CLIENT REFERENCES as a project — references and portfolio are separate data sources.
+- Paragraph 3: ONE closing paragraph that references ONLY projects from the PORTFOLIO PROJECTS data above that match the client's sector.${industry ? ` The user has categorized this RFP as "${industry}" — prioritize portfolio projects in that industry.` : ' If the client is corporate/commercial, reference only corporate projects. If healthcare, only healthcare. If government/municipal, only government projects.'} Do NOT mix sectors. NEVER mention a client from CLIENT REFERENCES as a project — references and portfolio are separate data sources.
 
 ## 2. Project Overview
 Write 2-3 paragraphs tailored specifically to the RFP issuer explaining why Outer Image is uniquely positioned for this project. Reference specific details from the RFP scope of work and any supplementary documents. Address evaluation criteria directly. Do NOT invent specific internal processes, proprietary methodologies, or named QA/QC procedures. Keep capability claims grounded in the data provided (team experience, portfolio projects, certifications).
@@ -237,7 +239,7 @@ CRITICAL RULES FOR PROJECT EXPERIENCE:
 - ONLY use projects listed in the PORTFOLIO PROJECTS section above. Do NOT invent, fabricate, or hallucinate any projects.
 - NEVER duplicate a project — each project may appear ONLY ONCE in section 5.03.
 - If a field value is not provided in the portfolio data, write "[Not provided]" — do NOT make up values.
-- Prioritize projects whose Service Line matches the RFP, but include projects from other service lines if fewer than 5 exact matches exist.
+- Prioritize projects whose Service Line matches the RFP${industry ? ` and whose client sector matches "${industry}"` : ''}, but include projects from other service lines or sectors if fewer than 5 exact matches exist.
 
 === ZERO-HALLUCINATION POLICY (APPLIES TO THE ENTIRE PROPOSAL) ===
 These rules override everything else and apply to EVERY section — Firm Overview, Project Overview, Project Approach, Project Experience, and all others.

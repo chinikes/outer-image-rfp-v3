@@ -53,6 +53,8 @@ export default function UploadPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [industry, setIndustry] = useState("");
+  const [projectType, setProjectType] = useState("");
 
   const handleFiles = useCallback(
     (newFiles) => {
@@ -172,6 +174,8 @@ export default function UploadPage() {
         body: JSON.stringify({
           primaryIndex,
           files: blobFiles,
+          industry: industry || null,
+          projectType: projectType || null,
         }),
       });
 
@@ -209,24 +213,21 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-neutral-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">OI</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                Outer Image RFP Portal
-              </h1>
-              <p className="text-xs text-gray-500">v3 — Multi-File Upload</p>
-            </div>
+          <div>
+            <h1 className="text-xl font-bold text-neutral-900 uppercase tracking-wide">
+              RFP Upload
+            </h1>
+            <p className="text-xs text-neutral-400 uppercase tracking-wider mt-0.5">
+              Multi-File Upload
+            </p>
           </div>
           <button
             onClick={() => router.push("/dashboard")}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            className="text-sm text-neutral-600 hover:text-black font-medium transition-colors uppercase tracking-wider"
           >
             View Dashboard →
           </button>
@@ -301,8 +302,8 @@ export default function UploadPage() {
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
                   dragActive
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-300 hover:border-blue-400 hover:bg-gray-50"
+                    ? "border-neutral-900 bg-neutral-100"
+                    : "border-neutral-300 hover:border-neutral-500 hover:bg-neutral-50"
                 }`}
               >
                 <div className="text-4xl mb-3">📁</div>
@@ -341,16 +342,16 @@ export default function UploadPage() {
                       key={`${file.name}-${index}`}
                       className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
                         index === primaryIndex
-                          ? "border-blue-300 bg-blue-50"
-                          : "border-gray-200 bg-gray-50"
+                          ? "border-neutral-900 bg-neutral-100"
+                          : "border-neutral-200 bg-neutral-50"
                       }`}
                     >
                       <button
                         onClick={() => setPrimaryIndex(index)}
                         className={`text-lg transition-all ${
                           index === primaryIndex
-                            ? "text-blue-500 scale-110"
-                            : "text-gray-300 hover:text-blue-400"
+                            ? "text-neutral-900 scale-110"
+                            : "text-neutral-300 hover:text-neutral-600"
                         }`}
                         title={
                           index === primaryIndex
@@ -370,7 +371,7 @@ export default function UploadPage() {
                         <p className="text-xs text-gray-500">
                           {formatFileSize(file.size)}
                           {index === primaryIndex && (
-                            <span className="ml-2 text-blue-600 font-semibold">
+                            <span className="ml-2 text-neutral-900 font-semibold">
                               Primary RFP
                             </span>
                           )}
@@ -387,15 +388,62 @@ export default function UploadPage() {
                   ))}
                 </div>
 
+                {/* Categorization */}
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Industry
+                    </label>
+                    <select
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-sm text-neutral-900 bg-white focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none transition-all"
+                    >
+                      <option value="">Select industry...</option>
+                      <option value="Corporate / Commercial">Corporate / Commercial</option>
+                      <option value="Healthcare">Healthcare</option>
+                      <option value="Government / Municipal">Government / Municipal</option>
+                      <option value="Education">Education</option>
+                      <option value="Hospitality">Hospitality</option>
+                      <option value="Retail">Retail</option>
+                      <option value="Residential">Residential</option>
+                      <option value="Transportation">Transportation</option>
+                      <option value="Cultural / Nonprofit">Cultural / Nonprofit</option>
+                      <option value="Mixed-Use">Mixed-Use</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Project Type
+                    </label>
+                    <select
+                      value={projectType}
+                      onChange={(e) => setProjectType(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-sm text-neutral-900 bg-white focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none transition-all"
+                    >
+                      <option value="">Select project type...</option>
+                      <option value="New Construction">New Construction</option>
+                      <option value="Renovation">Renovation</option>
+                      <option value="Rebrand">Rebrand</option>
+                      <option value="Tenant Fit-Out">Tenant Fit-Out</option>
+                      <option value="Wayfinding Program">Wayfinding Program</option>
+                      <option value="Code Compliance">Code Compliance</option>
+                      <option value="Exterior Signage">Exterior Signage</option>
+                      <option value="Environmental Graphics">Environmental Graphics</option>
+                      <option value="Master Planning">Master Planning</option>
+                    </select>
+                  </div>
+                </div>
+
                 {/* Submit Button */}
                 <div className="mt-6">
                   <button
                     onClick={handleSubmit}
                     disabled={uploading || files.length === 0}
-                    className={`w-full py-3 rounded-xl text-white font-semibold text-sm transition-all ${
+                    className={`w-full py-3 rounded-xl text-white font-semibold text-sm uppercase tracking-wider transition-all ${
                       uploading
-                        ? "bg-blue-400 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
+                        ? "bg-neutral-400 cursor-not-allowed"
+                        : "bg-black hover:bg-neutral-800 active:bg-neutral-900"
                     }`}
                   >
                     {uploading ? (
@@ -456,13 +504,13 @@ export default function UploadPage() {
             </p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-            <div className="text-2xl mb-2">✉️</div>
+            <div className="text-2xl mb-2">🏷️</div>
             <h3 className="font-semibold text-gray-900 text-sm">
-              Cover Letter Included
+              Smart Categorization
             </h3>
             <p className="text-xs text-gray-500 mt-1">
-              v3 generates a personalized cover letter prepended to the full
-              7-section proposal.
+              Tag by industry and project type so proposals match the right
+              portfolio projects automatically.
             </p>
           </div>
         </div>
