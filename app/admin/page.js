@@ -11,11 +11,19 @@ const tables = [
   { slug: "project-schedules", label: "Project Schedules", icon: "📅", description: "Timeline templates by service line" },
 ];
 
-const SERVICE_LINES = [
-  { name: "Design Only", color: "bg-neutral-100 text-neutral-700 border-neutral-300" },
-  { name: "Design + Fabrication", color: "bg-neutral-900 text-white border-neutral-900" },
-  { name: "Fabrication Only", color: "bg-neutral-200 text-neutral-800 border-neutral-300" },
+const DEFAULT_SERVICE_LINES = [
+  "Design Only",
+  "Design + Fabrication",
+  "Fabrication Only",
+  "Fabrication + Installation",
 ];
+
+function getServiceLineColor(name) {
+  if (name === "Design + Fabrication") return "bg-neutral-900 text-white border-neutral-900";
+  if (name === "Fabrication Only") return "bg-neutral-200 text-neutral-800 border-neutral-300";
+  if (name === "Fabrication + Installation") return "bg-neutral-300 text-neutral-900 border-neutral-400";
+  return "bg-neutral-100 text-neutral-700 border-neutral-300";
+}
 
 export default function AdminPage() {
   const [password, setPassword] = useState("");
@@ -23,6 +31,7 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [counts, setCounts] = useState({});
+  const [serviceLines, setServiceLines] = useState(DEFAULT_SERVICE_LINES);
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -51,6 +60,21 @@ export default function AdminPage() {
   if (!authenticated && typeof window !== "undefined" && sessionStorage.getItem("admin_auth") === "true") {
     setAuthenticated(true);
   }
+
+  // Fetch dynamic service lines from Airtable
+  useEffect(() => {
+    if (!authenticated) return;
+    async function fetchOptions() {
+      try {
+        const res = await fetch("/api/options", { cache: "no-store" });
+        const data = await res.json();
+        if (data.serviceLines?.length) setServiceLines(data.serviceLines);
+      } catch (err) {
+        console.error("Failed to fetch options:", err);
+      }
+    }
+    fetchOptions();
+  }, [authenticated]);
 
   // Fetch record counts
   useEffect(() => {
@@ -104,9 +128,9 @@ export default function AdminPage() {
       <div className="mb-6 p-4 rounded-xl border border-gray-200 bg-white">
         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">RFP Categories (per SOW)</div>
         <div className="flex gap-2 flex-wrap">
-          {SERVICE_LINES.map((sl) => (
-            <span key={sl.name} className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${sl.color}`}>
-              {sl.name}
+          {serviceLines.map((name) => (
+            <span key={name} className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getServiceLineColor(name)}`}>
+              {name}
             </span>
           ))}
         </div>

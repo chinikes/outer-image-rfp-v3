@@ -2,102 +2,108 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-const SERVICE_LINE_OPTIONS = ["Design Only", "Design + Fabrication","Fabrication + Installation" ,"Fabrication Only"];
-const TIER_OPTIONS = ["Corporate", "Government", "Non-Profit", "Mid-Market"];
+// Fallbacks used until Airtable options load
+const DEFAULT_SERVICE_LINES = ["Design Only", "Design + Fabrication","Fabrication + Installation" ,"Fabrication Only"];
+const DEFAULT_TIERS = ["Corporate", "Government", "Non-Profit", "Mid-Market"];
 
-const tableConfig = {
-  "team-bios": {
-    label: "Team Bios",
-    fields: [
-      { key: "Name", type: "text", required: true },
-      { key: "Title", type: "text", required: true },
-      { key: "Role", type: "select", options: ["Lead", "Design", "Fabrication", "Operations", "Production"] },
-      { key: "Bio (Short)", type: "textarea" },
-      { key: "Bio (Full)", type: "textarea" },
-      { key: "Service Lines", type: "multiselect", options: SERVICE_LINE_OPTIONS },
-      { key: "Certifications", type: "text" },
-      { key: "Portfolio Projects", type: "text" },
-    ],
-    displayField: "Name",
-    subtitleField: "Title",
-    badgeField: "Role",
-  },
-  "client-references": {
-    label: "Client References",
-    fields: [
-      { key: "Client Name", type: "text", required: true },
-      { key: "Project Name", type: "text", required: true },
-      { key: "Service Line", type: "select", options: SERVICE_LINE_OPTIONS },
-      { key: "Project Description", type: "textarea" },
-      { key: "Client Tier", type: "select", options: TIER_OPTIONS },
-      { key: "Contact Name", type: "text" },
-      { key: "Contact Email", type: "text" },
-      { key: "Contact Phone", type: "text" },
-      { key: "Year", type: "text" },
-    ],
-    displayField: "Client Name",
-    subtitleField: "Project Name",
-    badgeField: "Client Tier",
-  },
-  "portfolio": {
-    label: "Portfolio",
-    fields: [
-      { key: "Project Name", type: "text", required: true },
-      { key: "Client Name", type: "text" },
-      { key: "Service Line", type: "select", options: SERVICE_LINE_OPTIONS },
-      { key: "Client Tier", type: "select", options: TIER_OPTIONS },
-      { key: "Summary", type: "textarea" },
-      { key: "Completion Date", type: "text" },
-      { key: "Portfolio URL", type: "text" },
-      { key: "Project Type Tags", type: "text" },
-      { key: "Images / Links", type: "text" },
-    ],
-    displayField: "Project Name",
-    subtitleField: "Service Line",
-    badgeField: "Client Tier",
-  },
-  "rate-schedules": {
-    label: "Rate Schedules",
-    fields: [
-      { key: "Service Type", type: "select", options: SERVICE_LINE_OPTIONS },
-      { key: "Role / Line Item", type: "text", required: true },
-      { key: "Rate", type: "text", required: true },
-      { key: "Notes", type: "textarea" },
-    ],
-    displayField: "Role / Line Item",
-    subtitleField: "Rate",
-    badgeField: "Service Type",
-  },
-  "boilerplate": {
-    label: "Boilerplate Content",
-    fields: [
-      { key: "Section Name", type: "text", required: true },
-      { key: "Content", type: "textarea", required: true },
-      { key: "Service Lines", type: "multiselect", options: SERVICE_LINE_OPTIONS },
-      { key: "Last Updated", type: "text" },
-    ],
-    displayField: "Section Name",
-    subtitleField: "Service Lines",
-  },
-  "project-schedules": {
-    label: "Project Schedules",
-    fields: [
-      { key: "Template Name", type: "text", required: true },
-      { key: "Service Line", type: "select", options: SERVICE_LINE_OPTIONS, required: true },
-      { key: "Phases", type: "textarea", required: true },
-      { key: "Total Duration", type: "text" },
-      { key: "Notes", type: "textarea" },
-    ],
-    displayField: "Template Name",
-    subtitleField: "Service Line",
-    badgeField: "Service Line",
-  },
-};
+function buildTableConfig(serviceLines, tiers) {
+  return {
+    "team-bios": {
+      label: "Team Bios",
+      fields: [
+        { key: "Name", type: "text", required: true },
+        { key: "Title", type: "text", required: true },
+        { key: "Role", type: "select", options: ["Lead", "Design", "Fabrication", "Operations", "Production"] },
+        { key: "Bio (Short)", type: "textarea" },
+        { key: "Bio (Full)", type: "textarea" },
+        { key: "Service Lines", type: "multiselect", options: serviceLines },
+        { key: "Certifications", type: "text" },
+        { key: "Portfolio Projects", type: "text" },
+      ],
+      displayField: "Name",
+      subtitleField: "Title",
+      badgeField: "Role",
+    },
+    "client-references": {
+      label: "Client References",
+      fields: [
+        { key: "Client Name", type: "text", required: true },
+        { key: "Project Name", type: "text", required: true },
+        { key: "Service Line", type: "select", options: serviceLines },
+        { key: "Project Description", type: "textarea" },
+        { key: "Client Tier", type: "select", options: tiers },
+        { key: "Contact Name", type: "text" },
+        { key: "Contact Email", type: "text" },
+        { key: "Contact Phone", type: "text" },
+        { key: "Year", type: "text" },
+      ],
+      displayField: "Client Name",
+      subtitleField: "Project Name",
+      badgeField: "Client Tier",
+    },
+    "portfolio": {
+      label: "Portfolio",
+      fields: [
+        { key: "Project Name", type: "text", required: true },
+        { key: "Client Name", type: "text" },
+        { key: "Service Line", type: "select", options: serviceLines },
+        { key: "Client Tier", type: "select", options: tiers },
+        { key: "Summary", type: "textarea" },
+        { key: "Completion Date", type: "text" },
+        { key: "Portfolio URL", type: "text" },
+        { key: "Project Type Tags", type: "text" },
+        { key: "Images / Links", type: "text" },
+      ],
+      displayField: "Project Name",
+      subtitleField: "Service Line",
+      badgeField: "Client Tier",
+    },
+    "rate-schedules": {
+      label: "Rate Schedules",
+      fields: [
+        { key: "Service Type", type: "select", options: serviceLines },
+        { key: "Role / Line Item", type: "text", required: true },
+        { key: "Rate", type: "text", required: true },
+        { key: "Notes", type: "textarea" },
+      ],
+      displayField: "Role / Line Item",
+      subtitleField: "Rate",
+      badgeField: "Service Type",
+    },
+    "boilerplate": {
+      label: "Boilerplate Content",
+      fields: [
+        { key: "Section Name", type: "text", required: true },
+        { key: "Content", type: "textarea", required: true },
+        { key: "Service Lines", type: "multiselect", options: serviceLines },
+        { key: "Last Updated", type: "text" },
+      ],
+      displayField: "Section Name",
+      subtitleField: "Service Lines",
+    },
+    "project-schedules": {
+      label: "Project Schedules",
+      fields: [
+        { key: "Template Name", type: "text", required: true },
+        { key: "Service Line", type: "select", options: serviceLines, required: true },
+        { key: "Phases", type: "textarea", required: true },
+        { key: "Total Duration", type: "text" },
+        { key: "Notes", type: "textarea" },
+      ],
+      displayField: "Template Name",
+      subtitleField: "Service Line",
+      badgeField: "Service Line",
+    },
+  };
+}
 
 export default function TablePage() {
   const params = useParams();
   const router = useRouter();
-  const config = tableConfig[params.table];
+
+  const [serviceLineOptions, setServiceLineOptions] = useState(DEFAULT_SERVICE_LINES);
+  const [tierOptions, setTierOptions] = useState(DEFAULT_TIERS);
+  const config = buildTableConfig(serviceLineOptions, tierOptions)[params.table];
 
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,6 +117,21 @@ export default function TablePage() {
       router.push("/admin");
     }
   }, [router]);
+
+  // Fetch dynamic dropdown options from Airtable
+  useEffect(() => {
+    async function fetchOptions() {
+      try {
+        const res = await fetch("/api/options", { cache: "no-store" });
+        const data = await res.json();
+        if (data.serviceLines?.length) setServiceLineOptions(data.serviceLines);
+        if (data.clientTiers?.length) setTierOptions(data.clientTiers);
+      } catch (err) {
+        console.error("Failed to fetch dropdown options:", err);
+      }
+    }
+    fetchOptions();
+  }, []);
 
   // Fetch records
   useEffect(() => {
