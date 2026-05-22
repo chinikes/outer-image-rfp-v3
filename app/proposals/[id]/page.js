@@ -256,14 +256,17 @@ export default function ProposalViewPage() {
 
     const proposalSections = currentSections;
 
-    // Proposal letterhead — logo image
-    const logoImg = document.createElement("img");
-    logoImg.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNDAgODAiIHdpZHRoPSIyNDAiIGhlaWdodD0iODAiPgogIDxyZWN0IHdpZHRoPSIyNDAiIGhlaWdodD0iODAiIGZpbGw9IiMwMDAiLz4KICA8dGV4dCB4PSIxMjAiIHk9IjM2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssIEltcGFjdCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZmZmIiBsZXR0ZXItc3BhY2luZz0iNCI+T1VURVI8L3RleHQ+CiAgPHRleHQgeD0iMTIwIiB5PSI2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLCBJbXBhY3QsIEhlbHZldGljYSwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSIyOCIgZmlsbD0iI2ZmZiIgbGV0dGVyLXNwYWNpbmc9IjQiPklNQUdFPC90ZXh0Pgo8L3N2Zz4K";
-    logoImg.alt = "Outer Image";
-    logoImg.style.width = "180px";
-    logoImg.style.height = "auto";
-    logoImg.style.marginBottom = "12px";
-    content.appendChild(logoImg);
+    // Proposal letterhead — text-based logo
+    const logoText = document.createElement("div");
+    logoText.style.fontFamily = "Arial Black, Impact, Helvetica, sans-serif";
+    logoText.style.fontWeight = "900";
+    logoText.style.fontSize = "22pt";
+    logoText.style.letterSpacing = "4px";
+    logoText.style.color = "#000";
+    logoText.style.lineHeight = "1.2";
+    logoText.style.marginBottom = "8px";
+    logoText.innerHTML = "OUTER<br>IMAGE";
+    content.appendChild(logoText);
 
     const addressBlock = document.createElement("div");
     addressBlock.style.fontSize = "10.5pt";
@@ -391,7 +394,7 @@ export default function ProposalViewPage() {
         @page { margin: 1in 1in 1in 1in; }
         body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; }
         .letterhead { margin-bottom: 8pt; }
-        .logo-img { width: 180px; height: auto; margin: 0 0 12pt 0; }
+        .logo-text { font-family: Arial Black, Impact, Helvetica, sans-serif; font-weight: 900; font-size: 22pt; letter-spacing: 4px; color: #000; line-height: 1.2; margin: 0 0 8pt 0; }
         .address { font-size: 10.5pt; color: #555; line-height: 1.5; margin: 0 0 2pt 0; }
         .address a { color: #2C7A7B; text-decoration: none; }
         .divider { border: none; border-top: 1.5px solid #999; margin: 16pt 0 20pt 0; }
@@ -410,7 +413,7 @@ export default function ProposalViewPage() {
 
     // Proposal letterhead
     html += `<div class="letterhead">`;
-    html += `<img class="logo-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNDAgODAiIHdpZHRoPSIyNDAiIGhlaWdodD0iODAiPgogIDxyZWN0IHdpZHRoPSIyNDAiIGhlaWdodD0iODAiIGZpbGw9IiMwMDAiLz4KICA8dGV4dCB4PSIxMjAiIHk9IjM2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssIEltcGFjdCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZmZmIiBsZXR0ZXItc3BhY2luZz0iNCI+T1VURVI8L3RleHQ+CiAgPHRleHQgeD0iMTIwIiB5PSI2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLCBJbXBhY3QsIEhlbHZldGljYSwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSIyOCIgZmlsbD0iI2ZmZiIgbGV0dGVyLXNwYWNpbmc9IjQiPklNQUdFPC90ZXh0Pgo8L3N2Zz4K" alt="Outer Image">`;
+    html += `<div class="logo-text">OUTER<br>IMAGE</div>`;
     html += `<p class="address">226 42nd Street</p>`;
     html += `<p class="address">Brooklyn, NY 11232</p>`;
     html += `<p class="address">212.661.2124</p>`;

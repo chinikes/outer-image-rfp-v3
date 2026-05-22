@@ -177,7 +177,12 @@ Use the Firm History boilerplate. Keep to 1 paragraph.
 226 42nd Street, Brooklyn, NY 11232. Mention proximity/accessibility to the project location if known from the RFP or supplementary documents.
 
 ### 3.23 Project Team
-List the team members from the bios provided. For each: Name, Title, and a 2-sentence summary of their relevant experience. Match team to the service line.
+List the team members from the bios provided. For each: Name, Title, and a 2-sentence summary of their relevant experience.
+TEAM SELECTION RULES:
+- PRIORITIZE team members whose Service Lines include "${serviceLine}" or whose bios mention experience relevant to ${industry || 'the project sector'}.
+- For ${industry === 'Government' ? 'Government projects, lead with team members who have compliance, code, ADA, or public-sector experience' : industry === 'Corporate' ? 'Corporate projects, lead with team members who have brand, design, or high-profile commercial experience' : industry === 'Non-Profit' ? 'Non-Profit projects, lead with team members who have community, mission-driven, or budget-conscious project experience' : industry === 'Health' ? 'Health projects, lead with team members who have healthcare, ADA, wayfinding, or institutional experience' : 'this project type, lead with the most relevant team members'}.
+- List the Project Manager or Lead first, then the most relevant team members for this service line and industry.
+- When describing each person's experience, emphasize the aspects of their bio that are most relevant to ${serviceLine} work${industry ? ' in the ' + industry + ' sector' : ''}.
 
 ### 3.24 Disputes
 Use the Disputes boilerplate. If it says "none", state clearly: "Outer Image LLC has no record of disputes, litigation, or contract terminations."
