@@ -289,10 +289,10 @@ export default function UploadPage() {
                 </p>
                 <div className="mt-3 flex gap-3">
                   <button
-                    onClick={() => router.push(`/proposals/${success.id}`)}
+                    onClick={() => router.push("/dashboard")}
                     className="text-sm bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition-colors"
                   >
-                    View Proposal
+                    View Progress
                   </button>
                   <button
                     onClick={() => setSuccess(null)}
