@@ -8,14 +8,10 @@
   --brand-black: #000000;
   --brand-dark: #111111;
   --brand-gray: #333333;
-  --brand-navy: #0f2027;
-  --brand-navy-mid: #1a3040;
-  --brand-navy-light: #203a43;
-  --brand-teal: #2c7a7b;
-  --brand-teal-light: #38b2ac;
-  --brand-teal-accent: #4fd1c5;
-  --brand-gold: #d4a843;
-  --brand-gold-light: #e8c96a;
+  --brand-gray-mid: #666666;
+  --brand-gray-light: #999999;
+  --brand-muted: #f5f5f5;
+  --brand-accent: #000000;
 }
 
 body {

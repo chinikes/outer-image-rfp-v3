@@ -250,15 +250,15 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      {/* Header */}
-      <header className="bg-white border-b border-neutral-200">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-3xl mx-auto px-6 py-10">
+        {/* Page Header */}
+        <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-xl font-bold text-neutral-900 uppercase tracking-wide">
+            <h1 className="text-[28px] font-bold text-black tracking-tight">
               RFP Upload
             </h1>
-            <p className="text-xs text-neutral-400 uppercase tracking-wider mt-0.5">
-              Multi-File Upload
+            <p className="text-[15px] text-gray-500 mt-1.5">
+              Upload and process RFP documents
             </p>
           </div>
           <button
@@ -268,19 +268,16 @@ export default function UploadPage() {
             View Dashboard →
           </button>
         </div>
-      </header>
-
-      <main className="max-w-3xl mx-auto px-6 py-10">
         {/* Success State */}
         {success && (
-          <div className="mb-8 bg-green-50 border border-green-200 rounded-2xl p-6">
+          <div className="mb-8 bg-neutral-50 border border-neutral-300 rounded-2xl p-6">
             <div className="flex items-start gap-3">
-              <div className="text-2xl">✅</div>
+              <div className="text-2xl">✓</div>
               <div>
-                <h3 className="font-semibold text-green-900">
+                <h3 className="font-semibold text-neutral-900">
                   RFP Uploaded Successfully
                 </h3>
-                <p className="text-green-700 text-sm mt-1">
+                <p className="text-neutral-600 text-sm mt-1">
                   <strong>{success.rfpId}</strong> — {success.fileCount} file
                   {success.fileCount > 1 ? "s" : ""} received
                   {success.supplementaryCount > 0 &&
@@ -290,13 +287,13 @@ export default function UploadPage() {
                 <div className="mt-3 flex gap-3">
                   <button
                     onClick={() => router.push("/dashboard")}
-                    className="text-sm bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition-colors"
+                    className="text-sm bg-black text-white px-4 py-1.5 rounded-lg hover:bg-neutral-800 transition-colors"
                   >
                     View Progress
                   </button>
                   <button
                     onClick={() => setSuccess(null)}
-                    className="text-sm text-green-700 hover:text-green-900 font-medium"
+                    className="text-sm text-neutral-600 hover:text-black font-medium"
                   >
                     Upload Another
                   </button>
@@ -581,7 +578,7 @@ export default function UploadPage() {
             </p>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

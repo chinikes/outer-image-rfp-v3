@@ -222,7 +222,7 @@ export default function TablePage() {
       <div className="max-w-2xl mx-auto px-6 py-12">
         <button
           onClick={() => setEditing(null)}
-          className="text-sm text-teal-600 font-medium mb-6 bg-transparent border-none cursor-pointer p-0 hover:opacity-80"
+          className="text-sm text-neutral-600 font-medium mb-6 bg-transparent border-none cursor-pointer p-0 hover:opacity-80"
         >
           ← Back to {config.label}
         </button>
@@ -240,7 +240,7 @@ export default function TablePage() {
                   type="text"
                   value={form[f.key] || ""}
                   onChange={(e) => updateField(f.key, e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
                 />
               )}
               {f.type === "textarea" && (
@@ -248,14 +248,14 @@ export default function TablePage() {
                   value={form[f.key] || ""}
                   onChange={(e) => updateField(f.key, e.target.value)}
                   rows={5}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 resize-vertical"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-vertical"
                 />
               )}
               {f.type === "select" && (
                 <select
                   value={form[f.key] || ""}
                   onChange={(e) => updateField(f.key, e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-white"
                 >
                   <option value="">Select...</option>
                   {f.options.map((o) => (
@@ -274,7 +274,7 @@ export default function TablePage() {
                         onClick={() => toggleMultiselect(f.key, o)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                           selected
-                            ? "bg-teal-50 border-teal-400 text-teal-700"
+                            ? "bg-neutral-900 border-neutral-900 text-white"
                             : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
                         }`}
                       >
@@ -311,7 +311,7 @@ export default function TablePage() {
     <div className="max-w-3xl mx-auto px-6 py-12">
       <button
         onClick={() => router.push("/admin")}
-        className="text-sm text-teal-600 font-medium mb-6 bg-transparent border-none cursor-pointer p-0 hover:opacity-80"
+        className="text-sm text-neutral-600 font-medium mb-6 bg-transparent border-none cursor-pointer p-0 hover:opacity-80"
       >
         ← Back to Content Manager
       </button>
@@ -345,7 +345,7 @@ export default function TablePage() {
                     {r[config.displayField] || "Untitled"}
                   </span>
                   {config.badgeField && r[config.badgeField] && (
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-teal/10 text-brand-teal border border-brand-teal/20">
+                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-100 text-neutral-700 border border-neutral-300">
                       {r[config.badgeField]}
                     </span>
                   )}
@@ -365,11 +365,9 @@ export default function TablePage() {
                       <span
                         key={sl}
                         className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                          sl === "Design Only"
-                            ? "bg-blue-50 text-blue-700 border border-blue-200"
-                            : sl === "Design + Fabrication"
-                            ? "bg-purple-50 text-purple-700 border border-purple-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                          sl === "Design + Fabrication"
+                            ? "bg-neutral-900 text-white border border-neutral-900"
+                            : "bg-neutral-100 text-neutral-700 border border-neutral-300"
                         }`}
                       >
                         {sl}
@@ -381,7 +379,7 @@ export default function TablePage() {
               <div className="flex gap-2 ml-4">
                 <button
                   onClick={() => startEdit(r)}
-                  className="px-3 py-1.5 text-xs font-medium text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50"
+                  className="px-3 py-1.5 text-xs font-medium text-neutral-600 border border-neutral-300 rounded-lg hover:bg-neutral-100"
                 >
                   Edit
                 </button>

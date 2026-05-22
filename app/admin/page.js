@@ -12,9 +12,9 @@ const tables = [
 ];
 
 const SERVICE_LINES = [
-  { name: "Design Only", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  { name: "Design + Fabrication", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  { name: "Fabrication Only", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  { name: "Design Only", color: "bg-neutral-100 text-neutral-700 border-neutral-300" },
+  { name: "Design + Fabrication", color: "bg-neutral-900 text-white border-neutral-900" },
+  { name: "Fabrication Only", color: "bg-neutral-200 text-neutral-800 border-neutral-300" },
 ];
 
 export default function AdminPage() {
@@ -78,7 +78,7 @@ export default function AdminPage() {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             placeholder="Password"
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
           />
           <button
             onClick={handleLogin}
@@ -117,7 +117,7 @@ export default function AdminPage() {
           <button
             key={t.slug}
             onClick={() => router.push(`/admin/${t.slug}`)}
-            className="text-left p-5 rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-sm transition-all bg-white"
+            className="text-left p-5 rounded-xl border border-gray-200 hover:border-black hover:shadow-sm transition-all bg-white"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-2xl">{t.icon}</span>

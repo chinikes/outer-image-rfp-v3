@@ -6,11 +6,11 @@ import Link from "next/link";
 
 function StatusBadge({ status }) {
   const config = {
-    Received: "bg-gray-200 text-gray-600",
-    Parsing: "bg-yellow-100 text-yellow-800",
-    Drafting: "bg-blue-100 text-blue-800",
-    "Ready for Review": "bg-green-100 text-green-800",
-    Finalized: "bg-purple-100 text-purple-800",
+    Received: "bg-neutral-200 text-neutral-600",
+    Parsing: "bg-neutral-300 text-neutral-700",
+    Drafting: "bg-neutral-400 text-white",
+    "Ready for Review": "bg-neutral-800 text-white",
+    Finalized: "bg-black text-white",
   };
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${config[status] || config["Received"]}`}>
@@ -22,9 +22,10 @@ function StatusBadge({ status }) {
 
 function ServiceBadge({ line }) {
   const config = {
-    "Design Only": "bg-blue-50 text-blue-700 border-blue-200",
-    "Design + Fabrication": "bg-green-50 text-green-700 border-green-200",
-    "Fabrication Only": "bg-orange-50 text-orange-700 border-orange-200",
+    "Design Only": "bg-neutral-100 text-neutral-700 border-neutral-300",
+    "Design + Fabrication": "bg-neutral-900 text-white border-neutral-900",
+    "Fabrication Only": "bg-neutral-200 text-neutral-800 border-neutral-300",
+    "Fabrication + Installation": "bg-neutral-300 text-neutral-900 border-neutral-400",
   };
   return (
     <span className={`px-2.5 py-0.5 rounded-md border text-[11px] font-semibold ${config[line] || config["Design Only"]}`}>
@@ -76,7 +77,7 @@ useEffect(() => {
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-[28px] font-bold text-brand-navy tracking-tight">
+          <h1 className="text-[28px] font-bold text-black tracking-tight">
             Proposal Dashboard
           </h1>
           <p className="text-[15px] text-gray-500 mt-1.5">
@@ -85,7 +86,7 @@ useEffect(() => {
         </div>
         <Link
           href="/"
-          className="px-5 py-2.5 rounded-lg bg-gradient-to-br from-brand-teal to-brand-teal-accent text-white text-sm font-semibold no-underline hover:opacity-90 transition-all"
+          className="px-5 py-2.5 rounded-lg bg-black text-white text-sm font-semibold no-underline hover:bg-neutral-800 transition-all"
         >
           + New RFP
         </Link>
@@ -123,9 +124,9 @@ useEffect(() => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {[
-          { label: "Total RFPs", value: stats.total, color: "text-brand-navy" },
-          { label: "In Pipeline", value: stats.active, color: "text-brand-teal" },
-          { label: "Ready for Review", value: stats.ready, color: "text-green-600" },
+          { label: "Total RFPs", value: stats.total, color: "text-black" },
+          { label: "In Pipeline", value: stats.active, color: "text-neutral-600" },
+          { label: "Ready for Review", value: stats.ready, color: "text-black" },
         ].map((s) => (
           <div key={s.label} className="p-5 rounded-xl bg-white border border-gray-200 shadow-sm">
             <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
@@ -146,7 +147,7 @@ useEffect(() => {
             onClick={() => setFilter(s)}
             className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all
               ${filter === s
-                ? "bg-brand-navy text-white border-none"
+                ? "bg-black text-white border-none"
                 : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"}`}
           >
             {s}
@@ -173,7 +174,7 @@ useEffect(() => {
         {!loading && filtered.length === 0 && (
           <div className="px-5 py-12 text-center text-gray-400 text-sm">
             {configured
-              ? <>No proposals found. <Link href="/" className="text-brand-teal font-medium">Upload your first RFP</Link></>
+              ? <>No proposals found. <Link href="/" className="text-black font-medium underline">Upload your first RFP</Link></>
               : "Connect Airtable to see proposals here."}
           </div>
         )}

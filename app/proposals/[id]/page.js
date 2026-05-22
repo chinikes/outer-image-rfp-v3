@@ -496,7 +496,7 @@ export default function ProposalViewPage() {
     return (
       <div className="max-w-[960px] mx-auto px-6 py-12 text-center">
         <div className="text-red-600 mb-4">{error || "Proposal not found"}</div>
-        <Link href="/dashboard" className="text-brand-teal font-medium">
+        <Link href="/dashboard" className="text-neutral-600 font-medium">
           Back to Dashboard
         </Link>
       </div>
@@ -512,7 +512,7 @@ export default function ProposalViewPage() {
       {/* Back button */}
       <button
         onClick={() => router.push("/dashboard")}
-        className="flex items-center gap-1.5 text-brand-teal text-sm font-medium mb-6 bg-transparent border-none cursor-pointer p-0 hover:opacity-80"
+        className="flex items-center gap-1.5 text-neutral-600 text-sm font-medium mb-6 bg-transparent border-none cursor-pointer p-0 hover:opacity-80"
       >
         <svg
           className="w-4 h-4"
@@ -535,19 +535,19 @@ export default function ProposalViewPage() {
       <div className="flex justify-between items-start mb-8">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl font-bold text-brand-navy">
+            <h1 className="text-2xl font-bold text-black">
               {proposal.rfpName}
             </h1>
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
-              ${proposal.status === "Ready for Review" ? "bg-green-100 text-green-800" : "bg-purple-100 text-purple-800"}`}
+              ${proposal.status === "Ready for Review" ? "bg-neutral-800 text-white" : "bg-black text-white"}`}
             >
               {proposal.status}
             </span>
           </div>
           <div className="flex gap-4 text-[13px] text-gray-500 items-center">
             {proposal.serviceLine && (
-              <span className="px-2.5 py-0.5 rounded-md border border-green-200 bg-green-50 text-green-700 text-[11px] font-semibold">
+              <span className="px-2.5 py-0.5 rounded-md border border-neutral-300 bg-neutral-100 text-neutral-700 text-[11px] font-semibold">
                 {proposal.serviceLine}
               </span>
             )}
@@ -566,13 +566,13 @@ export default function ProposalViewPage() {
         <div className="flex gap-2">
           <button
             onClick={exportPDF}
-            className="px-5 py-2.5 rounded-lg bg-brand-teal text-white text-sm font-semibold hover:opacity-90 border-none cursor-pointer"
+            className="px-5 py-2.5 rounded-lg bg-black text-white text-sm font-semibold hover:opacity-90 border-none cursor-pointer"
           >
             Export PDF
           </button>
           <button
             onClick={exportWord}
-            className="px-5 py-2.5 rounded-lg bg-brand-navy text-white text-sm font-semibold hover:opacity-90 border-none cursor-pointer"
+            className="px-5 py-2.5 rounded-lg bg-black text-white text-sm font-semibold hover:opacity-90 border-none cursor-pointer"
           >
             Export Draft
           </button>
@@ -587,8 +587,8 @@ export default function ProposalViewPage() {
             onClick={() => setViewMode(mode)}
             className={`px-5 py-2 rounded-md text-sm font-medium transition-all border-none cursor-pointer ${
               viewMode === mode
-                ? "bg-brand-navy text-white"
-                : "bg-transparent text-gray-600 hover:text-brand-navy"
+                ? "bg-black text-white"
+                : "bg-transparent text-gray-600 hover:text-black"
             }`}
           >
             {mode === "sections" && "Sections"}
@@ -715,7 +715,7 @@ export default function ProposalViewPage() {
           <div className="flex flex-col gap-0.5">
             <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2 flex justify-between items-center">
               <span>Sections</span>
-              {reordering && <span className="text-[10px] text-brand-teal font-normal normal-case">Saving...</span>}
+              {reordering && <span className="text-[10px] text-neutral-600 font-normal normal-case">Saving...</span>}
             </div>
             {sections.map((s, i) => (
               <button
@@ -745,9 +745,9 @@ export default function ProposalViewPage() {
                 }}
                 className={`px-3 py-2.5 rounded-lg border-2 text-[13px] text-left cursor-grab transition-all flex items-center gap-2
                   ${activeSection === i
-                    ? "bg-brand-navy text-white font-semibold border-transparent"
+                    ? "bg-black text-white font-semibold border-transparent"
                     : "bg-transparent text-gray-600 hover:bg-gray-100 border-transparent"}
-                  ${dragOverIndex === i && dragIndex !== i ? "border-brand-teal border-dashed" : ""}
+                  ${dragOverIndex === i && dragIndex !== i ? "border-black border-dashed" : ""}
                   ${dragIndex === i ? "opacity-40" : ""}
                   `}
               >
@@ -762,7 +762,7 @@ export default function ProposalViewPage() {
           {/* Content panel */}
           <div className="rounded-xl border border-gray-200 bg-white p-8 min-h-[400px]">
             <div className="flex justify-between items-center mb-5">
-              <h2 className="text-xl font-bold text-brand-navy">
+              <h2 className="text-xl font-bold text-black">
                 {currentSection?.title}
               </h2>
               <button
@@ -773,7 +773,7 @@ export default function ProposalViewPage() {
                     setEditingSection(activeSection);
                   }
                 }}
-                className="px-3 py-1.5 rounded-lg bg-brand-teal text-white text-sm font-medium border-none cursor-pointer hover:opacity-90"
+                className="px-3 py-1.5 rounded-lg bg-black text-white text-sm font-medium border-none cursor-pointer hover:opacity-90"
               >
                 {editingSection === activeSection ? "Cancel" : "Edit"}
               </button>
@@ -792,14 +792,14 @@ export default function ProposalViewPage() {
                       [activeSection]: e.target.value,
                     }))
                   }
-                  className="w-full min-h-[400px] p-4 border border-gray-300 rounded-lg font-mono text-sm text-gray-700 focus:outline-none focus:border-brand-teal focus:ring-1 focus:ring-brand-teal"
+                  className="w-full min-h-[400px] p-4 border border-gray-300 rounded-lg font-mono text-sm text-gray-700 focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
                   placeholder="Enter markdown content..."
                 />
                 <div className="flex justify-between items-center">
                   <button
                     onClick={() => saveSection(activeSection)}
                     disabled={savingSection === activeSection}
-                    className="px-5 py-2.5 rounded-lg bg-brand-navy text-white text-sm font-semibold border-none cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-lg bg-black text-white text-sm font-semibold border-none cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {savingSection === activeSection ? (
                       <>
@@ -811,7 +811,7 @@ export default function ProposalViewPage() {
                     )}
                   </button>
                   {saveStatus === "saved" && (
-                    <span className="text-green-600 text-sm font-medium flex items-center gap-1">
+                    <span className="text-neutral-700 text-sm font-medium flex items-center gap-1">
                       ✓ Saved
                     </span>
                   )}
@@ -888,12 +888,12 @@ export default function ProposalViewPage() {
       {viewMode === "compare" && (
         <div className="grid grid-cols-2 gap-6 h-[600px]">
           <div className="rounded-xl border border-gray-200 bg-white p-6 overflow-y-auto">
-            <h3 className="text-lg font-bold text-brand-navy mb-4">
+            <h3 className="text-lg font-bold text-black mb-4">
               Extracted RFP Requirements
             </h3>
             {Object.entries(extractedData).map(([key, val]) => (
               <div key={key} className="mb-6 pb-4 border-b border-gray-100">
-                <h4 className="text-sm font-bold text-brand-navy mb-2 capitalize">
+                <h4 className="text-sm font-bold text-black mb-2 capitalize">
                   {key.replace(/([A-Z])/g, " $1").trim()}
                 </h4>
                 <div className="text-sm text-gray-700">
@@ -903,7 +903,7 @@ export default function ProposalViewPage() {
                     <ul className="space-y-1">
                       {val.map((item, i) => (
                         <li key={i} className="flex gap-2">
-                          <span className="text-brand-teal font-bold">✓</span>
+                          <span className="text-neutral-600 font-bold">✓</span>
                           <span>{JSON.stringify(item)}</span>
                         </li>
                       ))}
@@ -917,13 +917,13 @@ export default function ProposalViewPage() {
           </div>
 
           <div className="rounded-xl border border-gray-200 bg-white p-6 overflow-y-auto">
-            <h3 className="text-lg font-bold text-brand-navy mb-4">
+            <h3 className="text-lg font-bold text-black mb-4">
               Generated Proposal
             </h3>
             <div className="space-y-6">
               {sections.map((section, i) => (
                 <div key={i} className="pb-4 border-b border-gray-100">
-                  <h4 className="text-sm font-bold text-brand-navy mb-2">
+                  <h4 className="text-sm font-bold text-black mb-2">
                     {section.title}
                   </h4>
                   <div
@@ -953,7 +953,7 @@ export default function ProposalViewPage() {
               <button
                 onClick={runScoreAnalysis}
                 disabled={loadingScore}
-                className="px-6 py-3 rounded-lg bg-brand-navy text-white text-sm font-semibold border-none cursor-pointer hover:opacity-90 disabled:opacity-50"
+                className="px-6 py-3 rounded-lg bg-black text-white text-sm font-semibold border-none cursor-pointer hover:opacity-90 disabled:opacity-50"
               >
                 {loadingScore ? "Running Analysis..." : "Run Coverage Analysis"}
               </button>
@@ -976,7 +976,7 @@ export default function ProposalViewPage() {
                     {scoreData.overallScore}
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-brand-navy mb-2">Coverage Score</h3>
+                <h3 className="text-xl font-bold text-black mb-2">Coverage Score</h3>
                 <p className="text-sm text-gray-600">
                   {scoreData.overallScore >= 80
                     ? "Excellent coverage of RFP requirements"
@@ -988,13 +988,13 @@ export default function ProposalViewPage() {
 
               <div className="grid grid-cols-3 gap-6">
                 <div className="rounded-xl border border-gray-200 bg-white p-6">
-                  <h4 className="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
-                    <span className="text-green-600">✓</span> Strengths
+                  <h4 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="text-neutral-700">✓</span> Strengths
                   </h4>
                   <ul className="space-y-3">
                     {(scoreData.strengths || []).map((strength, i) => (
                       <li key={i} className="flex gap-2 text-sm text-gray-700">
-                        <span className="text-green-600 font-bold mt-0.5">✓</span>
+                        <span className="text-neutral-700 font-bold mt-0.5">✓</span>
                         <span>{strength}</span>
                       </li>
                     ))}
@@ -1002,7 +1002,7 @@ export default function ProposalViewPage() {
                 </div>
 
                 <div className="rounded-xl border border-gray-200 bg-white p-6">
-                  <h4 className="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
+                  <h4 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
                     <span className="text-red-600">✕</span> Gaps
                   </h4>
                   <ul className="space-y-3">
@@ -1016,13 +1016,13 @@ export default function ProposalViewPage() {
                 </div>
 
                 <div className="rounded-xl border border-gray-200 bg-white p-6">
-                  <h4 className="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
-                    <span className="text-blue-600">💡</span> Suggestions
+                  <h4 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+                    <span className="text-neutral-500">💡</span> Suggestions
                   </h4>
                   <ul className="space-y-3">
                     {(scoreData.suggestions || []).map((suggestion, i) => (
                       <li key={i} className="flex gap-2 text-sm text-gray-700">
-                        <span className="text-blue-600 mt-0.5">💡</span>
+                        <span className="text-neutral-500 mt-0.5">💡</span>
                         <span>{suggestion}</span>
                       </li>
                     ))}
@@ -1032,11 +1032,11 @@ export default function ProposalViewPage() {
 
               {(scoreData.requirements || scoreData.requirementsCoverage) && (
                 <div className="rounded-xl border border-gray-200 bg-white p-6">
-                  <h4 className="text-lg font-bold text-brand-navy mb-4">Requirements Checklist</h4>
+                  <h4 className="text-lg font-bold text-black mb-4">Requirements Checklist</h4>
                   <div className="grid grid-cols-2 gap-4">
                     {(scoreData.requirements || scoreData.requirementsCoverage || []).map((req, i) => (
                       <div key={i} className="flex gap-3 items-start">
-                        <span className={req.covered ? "text-green-600" : "text-gray-300"}>
+                        <span className={req.covered ? "text-neutral-700" : "text-gray-300"}>
                           {req.covered ? "✓" : "○"}
                         </span>
                         <div>
@@ -1055,7 +1055,7 @@ export default function ProposalViewPage() {
                 <button
                   onClick={runScoreAnalysis}
                   disabled={loadingScore}
-                  className="px-6 py-2 rounded-lg bg-brand-navy text-white text-sm font-semibold border-none cursor-pointer hover:opacity-90 disabled:opacity-50"
+                  className="px-6 py-2 rounded-lg bg-black text-white text-sm font-semibold border-none cursor-pointer hover:opacity-90 disabled:opacity-50"
                 >
                   {loadingScore ? "Re-analyzing..." : "Re-run Analysis"}
                 </button>
