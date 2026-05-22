@@ -155,6 +155,8 @@ export default function UploadPage() {
   };
 
   const handleSubmit = async () => {
+    if (uploading) return; // Guard against double-clicks
+
     if (files.length === 0) {
       setError("Please add at least one RFP file.");
       return;
@@ -182,21 +184,26 @@ export default function UploadPage() {
           `Uploading file ${i + 1} of ${files.length}: ${file.name}...`
         );
 
-        const blob = await upload(
-          `rfps/${timestamp}-${i}-${file.name}`,
-          file,
-          {
-            access: "public",
-            handleUploadUrl: "/api/upload/blob-token",
-          }
-        );
+        try {
+          const blob = await upload(
+            `rfps/${timestamp}-${i}-${file.name}`,
+            file,
+            {
+              access: "public",
+              handleUploadUrl: "/api/upload/blob-token",
+            }
+          );
 
-        blobFiles.push({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: blob.url,
-        });
+          blobFiles.push({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: blob.url,
+          });
+        } catch (blobErr) {
+          console.error(`Blob upload failed for ${file.name}:`, blobErr);
+          throw new Error(`Failed to upload "${file.name}": ${blobErr.message}`);
+        }
       }
 
       // Step 2: Send blob URLs to our API
@@ -428,7 +435,10 @@ export default function UploadPage() {
                   type="file"
                   multiple
                   accept={ACCEPTED_EXTENSIONS.join(",")}
-                  onChange={(e) => handleFiles(e.target.files)}
+                  onChange={(e) => {
+                    if (e.target.files?.length) handleFiles(e.target.files);
+                    e.target.value = "";  // Reset so same file(s) can be re-selected
+                  }}
                   className="hidden"
                 />
               </div>
@@ -442,7 +452,7 @@ export default function UploadPage() {
                     Files ({files.length})
                   </h3>
                   <span className="text-xs text-gray-400">
-                    Click the star to set primary RFP file
+                    Select the primary RFP file
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -457,18 +467,24 @@ export default function UploadPage() {
                     >
                       <button
                         onClick={() => setPrimaryIndex(index)}
-                        className={`text-lg transition-all ${
-                          index === primaryIndex
-                            ? "text-neutral-900 scale-110"
-                            : "text-neutral-300 hover:text-neutral-600"
-                        }`}
+                        className="flex-shrink-0 transition-all"
                         title={
                           index === primaryIndex
                             ? "Primary RFP file"
                             : "Set as primary"
                         }
                       >
-                        {index === primaryIndex ? "⭐" : "☆"}
+                        <span className={`flex items-center justify-center w-5 h-5 rounded-full border-2 transition-all ${
+                          index === primaryIndex
+                            ? "border-black bg-black"
+                            : "border-neutral-300 bg-white hover:border-neutral-500"
+                        }`}>
+                          {index === primaryIndex && (
+                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                              <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </span>
                       </button>
                       <span className="text-xl">
                         {getFileIcon(file.type, file.name)}
