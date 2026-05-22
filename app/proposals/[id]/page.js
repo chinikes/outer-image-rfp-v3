@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -38,6 +38,16 @@ export default function ProposalViewPage() {
     }
     if (params.id) fetchProposal();
   }, [params.id]);
+
+  // Derive effective deadline — fall back to extracted data if Airtable field is empty
+  const effectiveDeadline = useMemo(() => {
+    if (!proposal) return null;
+    if (proposal.deadline) return proposal.deadline;
+    const ed = proposal.extractedData || {};
+    const rawKey = Object.keys(ed).find(k => /submission\s*deadline\s*raw/i.test(k));
+    const fmtKey = Object.keys(ed).find(k => /^submission\s*deadline$/i.test(k));
+    return (fmtKey && ed[fmtKey]) || (rawKey && ed[rawKey]) || null;
+  }, [proposal]);
 
   const parseSections = (draft) => {
     if (!draft) return [{ title: "Draft", content: "No draft generated yet." }];
@@ -307,10 +317,14 @@ export default function ProposalViewPage() {
     metaInfo.style.fontSize = "10pt";
     metaInfo.style.color = "#718096";
     metaInfo.style.margin = "0 0 20px 0";
+    const fmtDeadline = (() => {
+      if (!effectiveDeadline) return null;
+      const d = new Date(effectiveDeadline);
+      return isNaN(d.getTime()) ? effectiveDeadline : d.toLocaleDateString();
+    })();
     const metaText = [
       proposal.serviceLine && `Service Line: ${proposal.serviceLine}`,
-      proposal.deadline &&
-        `Deadline: ${new Date(proposal.deadline).toLocaleDateString()}`,
+      fmtDeadline && `Deadline: ${fmtDeadline}`,
       `Status: ${proposal.status}`,
     ]
       .filter(Boolean)
@@ -434,7 +448,10 @@ export default function ProposalViewPage() {
     // Service line + deadline meta
     const metaParts = [];
     if (proposal.serviceLine) metaParts.push(`Service Line: ${proposal.serviceLine}`);
-    if (proposal.deadline) metaParts.push(`Deadline: ${new Date(proposal.deadline).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`);
+    if (effectiveDeadline) {
+      const wd = new Date(effectiveDeadline);
+      metaParts.push(`Deadline: ${isNaN(wd.getTime()) ? effectiveDeadline : wd.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`);
+    }
     if (metaParts.length > 0) {
       html += `<p style="font-size:10pt;color:#718096;margin:0 0 16pt 0;">${metaParts.join(" &nbsp;|&nbsp; ")}</p>`;
     }
@@ -504,7 +521,21 @@ export default function ProposalViewPage() {
   }
 
   const sections = parseSections(proposal.generatedDraft);
-  const extractedData = proposal.extractedData || {};
+  const rawExtracted = proposal.extractedData || {};
+
+  // Merge "Submission Deadline Raw" into "Submission Deadline" if the latter is empty,
+  // then drop the raw key so we don't show a redundant field
+  const extractedData = { ...rawExtracted };
+  const dlRawKey = Object.keys(extractedData).find(k => /submission\s*deadline\s*raw/i.test(k));
+  const dlKey = Object.keys(extractedData).find(k => /^submission\s*deadline$/i.test(k));
+  if (dlRawKey && extractedData[dlRawKey]) {
+    if (dlKey && !extractedData[dlKey]) {
+      extractedData[dlKey] = extractedData[dlRawKey];
+    }
+    delete extractedData[dlRawKey]; // Remove redundant raw field from display
+  }
+
+
   const currentSection = sections[activeSection];
 
   return (
@@ -551,14 +582,15 @@ export default function ProposalViewPage() {
                 {proposal.serviceLine}
               </span>
             )}
-            {proposal.deadline && (
+            {effectiveDeadline && (
               <span>
                 Due{" "}
-                {new Date(proposal.deadline).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+                {(() => {
+                  const d = new Date(effectiveDeadline);
+                  return isNaN(d.getTime())
+                    ? effectiveDeadline  // Show raw text if not parseable
+                    : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+                })()}
               </span>
             )}
           </div>
