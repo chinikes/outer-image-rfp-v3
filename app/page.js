@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
 
@@ -54,7 +54,34 @@ export default function UploadPage() {
   const [success, setSuccess] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [industry, setIndustry] = useState("");
-  const [projectType, setProjectType] = useState("");
+  const [serviceLine, setServiceLine] = useState("");
+
+  // Airtable-driven dropdown options
+  const [serviceLineOptions, setServiceLineOptions] = useState([]);
+  const [clientTierOptions, setClientTierOptions] = useState([]);
+  const [optionsLoading, setOptionsLoading] = useState(true);
+
+  // Validation state
+  const [showValidation, setShowValidation] = useState(false);
+
+  // Fetch dropdown options from Airtable on mount
+  useEffect(() => {
+    async function fetchOptions() {
+      try {
+        const res = await fetch("/api/options");
+        if (res.ok) {
+          const data = await res.json();
+          setServiceLineOptions(data.serviceLines || []);
+          setClientTierOptions(data.clientTiers || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dropdown options:", err);
+      } finally {
+        setOptionsLoading(false);
+      }
+    }
+    fetchOptions();
+  }, []);
 
   const handleFiles = useCallback(
     (newFiles) => {
@@ -133,6 +160,13 @@ export default function UploadPage() {
       return;
     }
 
+    // Validate mandatory fields
+    if (!industry || !serviceLine) {
+      setShowValidation(true);
+      setError("Industry and Service Type are required before uploading.");
+      return;
+    }
+
     setUploading(true);
     setError(null);
     setSuccess(null);
@@ -174,8 +208,8 @@ export default function UploadPage() {
         body: JSON.stringify({
           primaryIndex,
           files: blobFiles,
-          industry: industry || null,
-          projectType: projectType || null,
+          industry,
+          serviceLine,
         }),
       });
 
@@ -211,6 +245,8 @@ export default function UploadPage() {
       setUploading(false);
     }
   };
+
+  const isFormValid = files.length > 0 && industry && serviceLine;
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -291,6 +327,82 @@ export default function UploadPage() {
                 Upload your primary RFP file and any supplementary documents.
                 The primary file will be used for proposal generation.
               </p>
+            </div>
+
+            {/* Categorization — above the drop zone */}
+            <div className="px-6 pt-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">
+                    Industry <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={industry}
+                      onChange={(e) => { setIndustry(e.target.value); setShowValidation(false); }}
+                      disabled={optionsLoading}
+                      className={`w-full appearance-none px-4 py-3 rounded-lg border text-sm bg-white transition-all outline-none cursor-pointer ${
+                        showValidation && !industry
+                          ? "border-red-400 ring-1 ring-red-400 text-red-700"
+                          : industry
+                            ? "border-neutral-900 text-neutral-900 font-medium"
+                            : "border-neutral-300 text-neutral-500"
+                      } focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <option value="">{optionsLoading ? "Loading..." : "Select industry"}</option>
+                      {clientTierOptions.map((tier) => (
+                        <option key={tier} value={tier}>{tier}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  </div>
+                  {showValidation && !industry && (
+                    <p className="text-red-500 text-xs mt-1">Required</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">
+                    Service Type <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={serviceLine}
+                      onChange={(e) => { setServiceLine(e.target.value); setShowValidation(false); }}
+                      disabled={optionsLoading}
+                      className={`w-full appearance-none px-4 py-3 rounded-lg border text-sm bg-white transition-all outline-none cursor-pointer ${
+                        showValidation && !serviceLine
+                          ? "border-red-400 ring-1 ring-red-400 text-red-700"
+                            : serviceLine
+                            ? "border-neutral-900 text-neutral-900 font-medium"
+                            : "border-neutral-300 text-neutral-500"
+                      } focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <option value="">{optionsLoading ? "Loading..." : "Select service type"}</option>
+                      {serviceLineOptions.map((sl) => (
+                        <option key={sl} value={sl}>{sl}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  </div>
+                  {showValidation && !serviceLine && (
+                    <p className="text-red-500 text-xs mt-1">Required</p>
+                  )}
+                </div>
+              </div>
+              {industry && serviceLine && (
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-100 rounded text-xs font-medium text-neutral-700">
+                    {industry}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-900 rounded text-xs font-medium text-white">
+                    {serviceLine}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Drop Zone */}
@@ -388,62 +500,17 @@ export default function UploadPage() {
                   ))}
                 </div>
 
-                {/* Categorization */}
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Industry
-                    </label>
-                    <select
-                      value={industry}
-                      onChange={(e) => setIndustry(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-sm text-neutral-900 bg-white focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none transition-all"
-                    >
-                      <option value="">Select industry...</option>
-                      <option value="Corporate / Commercial">Corporate / Commercial</option>
-                      <option value="Healthcare">Healthcare</option>
-                      <option value="Government / Municipal">Government / Municipal</option>
-                      <option value="Education">Education</option>
-                      <option value="Hospitality">Hospitality</option>
-                      <option value="Retail">Retail</option>
-                      <option value="Residential">Residential</option>
-                      <option value="Transportation">Transportation</option>
-                      <option value="Cultural / Nonprofit">Cultural / Nonprofit</option>
-                      <option value="Mixed-Use">Mixed-Use</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Project Type
-                    </label>
-                    <select
-                      value={projectType}
-                      onChange={(e) => setProjectType(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-sm text-neutral-900 bg-white focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none transition-all"
-                    >
-                      <option value="">Select project type...</option>
-                      <option value="New Construction">New Construction</option>
-                      <option value="Renovation">Renovation</option>
-                      <option value="Rebrand">Rebrand</option>
-                      <option value="Tenant Fit-Out">Tenant Fit-Out</option>
-                      <option value="Wayfinding Program">Wayfinding Program</option>
-                      <option value="Code Compliance">Code Compliance</option>
-                      <option value="Exterior Signage">Exterior Signage</option>
-                      <option value="Environmental Graphics">Environmental Graphics</option>
-                      <option value="Master Planning">Master Planning</option>
-                    </select>
-                  </div>
-                </div>
-
                 {/* Submit Button */}
                 <div className="mt-6">
                   <button
                     onClick={handleSubmit}
-                    disabled={uploading || files.length === 0}
-                    className={`w-full py-3 rounded-xl text-white font-semibold text-sm uppercase tracking-wider transition-all ${
+                    disabled={uploading}
+                    className={`w-full py-3.5 rounded-xl text-white font-semibold text-sm uppercase tracking-wider transition-all ${
                       uploading
                         ? "bg-neutral-400 cursor-not-allowed"
-                        : "bg-black hover:bg-neutral-800 active:bg-neutral-900"
+                        : isFormValid
+                          ? "bg-black hover:bg-neutral-800 active:bg-neutral-900"
+                          : "bg-neutral-300 hover:bg-neutral-400"
                     }`}
                   >
                     {uploading ? (
@@ -509,7 +576,7 @@ export default function UploadPage() {
               Smart Categorization
             </h3>
             <p className="text-xs text-gray-500 mt-1">
-              Tag by industry and project type so proposals match the right
+              Tag by industry and service type so proposals match the right
               portfolio projects automatically.
             </p>
           </div>

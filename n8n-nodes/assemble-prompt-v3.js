@@ -34,7 +34,6 @@ function capList(arr, max) {
 const rfp = merged.extractedData || {};
 const serviceLine = merged.serviceLine || 'Design + Fabrication';
 const industry = merged.industry || '';
-const projectType = merged.projectType || '';
 
 // ---- Build team bios section (capped at 8, truncated) ----
 const teamSection = capList(merged.teamBios, 8).map(t =>
@@ -119,7 +118,7 @@ Generate a complete proposal response for the following RFP using the standard p
 Issuer: ${rfp.issuer || 'Unknown'}
 Project Title: ${rfp.projectTitle || 'Unknown'}
 Submission Deadline: ${rfp.submissionDeadline || 'TBD'}
-Service Line: ${serviceLine}${industry ? `\nIndustry: ${industry}` : ''}${projectType ? `\nProject Type: ${projectType}` : ''}
+Service Line: ${serviceLine}${industry ? `\nIndustry: ${industry}` : ''}
 Scope of Work: ${truncate(rfp.scopeOfWork, 1500)}
 Evaluation Criteria: ${truncate(rfp.evaluationCriteria, 500)}
 Required Certifications: ${rfp.requiredCertifications || 'None specified'}
