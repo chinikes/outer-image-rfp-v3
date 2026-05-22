@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap");
+
+:root {
+  --brand-navy: #0f2027;
+  --brand-navy-mid: #1a3040;
+  --brand-navy-light: #203a43;
+  --brand-teal: #2c7a7b;
+  --brand-teal-light: #38b2ac;
+  --brand-teal-accent: #4fd1c5;
+  --brand-gold: #d4a843;
+  --brand-gold-light: #e8c96a;
+}
+
+body {
+  font-family: "DM Sans", system-ui, sans-serif;
+  background-color: #f8fafb;
+  color: #2d3748;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

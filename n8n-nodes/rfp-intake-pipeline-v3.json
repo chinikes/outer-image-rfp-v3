@@ -1,0 +1,1183 @@
+{
+  "name": "RFP Intake Pipeline v3",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rfp-intake-v3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a533ba66-e571-4bd0-839e-f8394a8db18c",
+      "name": "Webhook (Trigger)",
+      "webhookId": "rfp-intake-v3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://outer-image-rfp-v3.vercel.app/api/webhook/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recordId\": \"{{ $json.body.recordId }}\",\n  \"status\": \"Parsing\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        312,
+        0
+      ],
+      "id": "114a6ce8-04f1-4fd9-96f5-59229c192840",
+      "name": "Update Status to Parsing"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook (Trigger)').item.json.body.fileUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "7081171b-dff9-4578-b5c1-44736cb420d6",
+      "name": "Download File"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "061cf239-ba51-47a8-ba8b-e62ad4b37fc4",
+              "leftValue": "={{ $('Webhook (Trigger)').item.json.body.fileType }}",
+              "rightValue": "pdf",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        0
+      ],
+      "id": "0ab8f044-8dc2-4a7f-80c8-a511623ed0fe",
+      "name": "Route by File Type"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [\n      {\n        \"inline_data\": {\n          \"mime_type\": \"{{ $json.mimeType }}\",\n          \"data\": \"{{ $json.base64Data }}\"\n        }\n      },\n      {\n        \"text\": \"Extract structured data from this RFP document. Return ONLY valid JSON with no markdown formatting, no code fences, and no extra text. For serviceLine, read the scope of work carefully and pick the SINGLE best match from exactly these four values: 'Design Only', 'Design + Fabrication', 'Fabrication Only', or 'Fabrication + Installation'. If the RFP asks for design, fabrication, AND installation, choose 'Design + Fabrication'. Use this exact structure: {\\\"issuer\\\": \\\"\\\", \\\"projectTitle\\\": \\\"\\\", \\\"submissionDeadline\\\": \\\"\\\", \\\"scopeOfWork\\\": \\\"\\\", \\\"evaluationCriteria\\\": \\\"\\\", \\\"requiredCertifications\\\": \\\"\\\", \\\"budgetRange\\\": \\\"\\\", \\\"serviceLine\\\": \\\"\\\", \\\"requiredSections\\\": [], \\\"keyRequirements\\\": []}\"\n      }\n    ]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1664,
+        -16
+      ],
+      "id": "353a4431-733a-427f-89e0-a57f88787b60",
+      "name": "Gemini Parse PDF",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "68tlIYub0MfgFond",
+          "name": "Gemini API Key"
+        },
+        "googlePalmApi": {
+          "id": "aB6rkM4Lk507J9up",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.candidates[0].content.parts[0].text;\nconst cleaned = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst extracted = JSON.parse(cleaned);\nreturn [{ json: { extractedData: extracted } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        -16
+      ],
+      "id": "b1e8b99a-dc89-4005-b9b9-40b60aa828ee",
+      "name": "Extract Gemini Response"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://outer-image-rfp-v3.vercel.app/api/webhook/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recordId\": \"{{ $('Webhook (Trigger)').item.json.body.recordId }}\",\n  \"status\": \"Drafting\",\n  \"extractedData\": {{ JSON.stringify($json.extractedData) }},\n  \"serviceLine\": \"{{ $json.extractedData.serviceLine }}\",\n  \"deadline\": \"{{ $json.submissionDeadlineDate }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2640,
+        -32
+      ],
+      "id": "1fa15cc9-d36b-4f5d-9f0b-6ac62694db53",
+      "name": "Send Extracted Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o\",\n  \"temperature\": 0.4,\n  \"max_tokens\": 8000,\n  \"messages\": [\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.prompt) }} }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4864,
+        -32
+      ],
+      "id": "8b84cbd8-44f0-4803-9aa1-07c1bce0632b",
+      "name": "OpenAI Generate Draft",
+      "credentials": {
+        "openAiApi": {
+          "id": "BTUPpQplptotE3j9",
+          "name": "OpenAi for RFP Parser"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://outer-image-rfp-v3.vercel.app/api/webhook/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recordId\": \"{{ $('Webhook (Trigger)').item.json.body.recordId }}\",\n  \"status\": \"Ready for Review\",\n  \"generatedDraft\": {{ JSON.stringify($json.choices[0].message.content) }},\n  \"version\": \"3.0\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5056,
+        -32
+      ],
+      "id": "cf756e01-025b-4637-88b5-00063a4bf80e",
+      "name": "Deliver Draft"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app9edcpFf8yVarSQ",
+          "mode": "list",
+          "cachedResultName": "Outer Image — RFP Content",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblZaYa2BSw0dMxQW",
+          "mode": "list",
+          "cachedResultName": "Team Bios",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ/tblZaYa2BSw0dMxQW"
+        },
+        "filterByFormula": "==FIND(\"{{ $('Set Service Line').item.json.serviceLine }}\", ARRAYJOIN({Service Lines}, \",\"))",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        3136,
+        -32
+      ],
+      "id": "c6e98be0-c00b-439e-96ba-137a0a73bf35",
+      "name": "Fetch Team Bios",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "8Cu5HSXIOw5u9ir3",
+          "name": "Airtable OAuth2API agiledevs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app9edcpFf8yVarSQ",
+          "mode": "list",
+          "cachedResultName": "Outer Image — RFP Content",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblIHnxVg4vhjHNCq",
+          "mode": "list",
+          "cachedResultName": "Client References",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ/tblIHnxVg4vhjHNCq"
+        },
+        "filterByFormula": "={Service Line} = \"{{ $('Set Service Line').item.json.serviceLine }}\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        3376,
+        -32
+      ],
+      "id": "1e21def4-4105-43b0-9e4e-470893bd8f6d",
+      "name": "Fetch Client References",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "8Cu5HSXIOw5u9ir3",
+          "name": "Airtable OAuth2API agiledevs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app9edcpFf8yVarSQ",
+          "mode": "list",
+          "cachedResultName": "Outer Image — RFP Content",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblfMp7dRmU7PeY9F",
+          "mode": "list",
+          "cachedResultName": "Portfolio",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ/tblfMp7dRmU7PeY9F"
+        },
+        "filterByFormula": "={Service Line} = \"{{ $('Set Service Line').item.json.serviceLine }}\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        3632,
+        -32
+      ],
+      "id": "727f791f-c636-454c-acd8-76934977766b",
+      "name": "Fetch Portfolio",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "8Cu5HSXIOw5u9ir3",
+          "name": "Airtable OAuth2API agiledevs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app9edcpFf8yVarSQ",
+          "mode": "list",
+          "cachedResultName": "Outer Image — RFP Content",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblWBRYKT20kT0T8L",
+          "mode": "list",
+          "cachedResultName": "Boilerplate Content",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ/tblWBRYKT20kT0T8L"
+        },
+        "filterByFormula": "=FIND(\"{{ $('Set Service Line').item.json.serviceLine }}\", ARRAYJOIN({Service Lines}, \",\"))",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        3840,
+        -32
+      ],
+      "id": "98909659-e7df-4a44-9da4-a13083da3501",
+      "name": "Fetch Boilerplate",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "8Cu5HSXIOw5u9ir3",
+          "name": "Airtable OAuth2API agiledevs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d95a9748-255f-4a66-a2f1-0d07fe3c89b8",
+              "leftValue": "={{ $('Webhook (Trigger)').item.json.body.fileType }}",
+              "rightValue": "xlsx",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        320
+      ],
+      "id": "b0436508-4614-4609-be84-3b11324cd817",
+      "name": "Route if Excel"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "sheetName": ""
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        320
+      ],
+      "id": "99c99946-7cd2-442e-9512-69e7d9392f79",
+      "name": "Read Excel"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet allText = '';\nfor (const item of items) {\n  const row = item.json;\n  const values = Object.entries(row)\n    .filter(([key, val]) => val !== null && val !== undefined && String(val).trim() !== '')\n    .map(([key, val]) => `${key}: ${val}`)\n    .join(' | ');\n  if (values.trim()) {\n    allText += values + '\\n';\n  }\n}\nlet firmHint = '';\nconst lower = allText.toLowerCase();\nif (lower.includes('jll') || lower.includes('jones lang lasalle')) {\n  firmHint = 'This appears to be a JLL-format RFP. JLL typically places scope, evaluation criteria, and submission requirements on separate tabs.';\n} else if (lower.includes('gardiner') || lower.includes('g&t')) {\n  firmHint = 'This appears to be a Gardiner & Theobald-format RFP. G&T uses structured requirement matrices across tabs.';\n} else if (lower.includes('vva')) {\n  firmHint = 'This appears to be a VVA-format RFP. VVA spreads fabrication scope, vendor requirements, and evaluation across multiple tabs.';\n}\nreturn [{\n  json: {\n    prompt: `Extract structured data from this RFP spreadsheet. ${firmHint}\nIMPORTANT: Only the first sheet of this multi-tab spreadsheet is shown. Based on the project overview data visible, infer likely evaluation criteria, required certifications, and scope details that would typically accompany this type of RFP from this PM firm.\nReturn ONLY valid JSON with no markdown formatting, no code fences, and no extra text. Use this exact structure: {\"issuer\": \"\", \"projectTitle\": \"\", \"submissionDeadline\": \"\", \"scopeOfWork\": \"\", \"evaluationCriteria\": \"\", \"requiredCertifications\": \"\", \"budgetRange\": \"\", \"serviceLine\": \"\", \"requiredSections\": [], \"keyRequirements\": []}\n\nFor serviceLine, choose exactly one of these four values using these rules:\n- \"Design + Fabrication\": RFP requests BOTH design/wayfinding services AND fabrication, manufacturing, or installation of signs\n- \"Design Only\": RFP requests design or wayfinding services only, with NO mention of fabrication or manufacturing\n- \"Fabrication Only\": RFP requests manufacturing or building of signs only, with no design work\n- \"Fabrication + Installation\": RFP requests fabrication AND installation but NO design services\nWhen in doubt, look for words like \"fabrication\", \"manufacturing\", \"production\", \"installation of signs\" — if present alongside design, use \"Design + Fabrication\".\n\nSpreadsheet content:\n${allText}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        304
+      ],
+      "id": "f749a849-1fd3-4054-bc4d-d43ff9100cab",
+      "name": "Format Excel Text"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        304
+      ],
+      "id": "acf0f5b1-987c-48d5-8a7f-07545cddab45",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aB6rkM4Lk507J9up",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst text = input.content?.parts?.[0]?.text || input.text || '';\nconst cleaned = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst parsed = JSON.parse(cleaned);\n\n// Wrap in extractedData to match PDF path structure\nreturn [{ json: { extractedData: parsed } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        240
+      ],
+      "id": "cd77d2cf-20c8-44ec-867a-1254b405dad2",
+      "name": "Extract Excel Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "let serviceLine = '';\ntry {\n  serviceLine = $('Extract Gemini Response').first().json.extractedData?.serviceLine || '';\n} catch (e) {}\nif (!serviceLine) {\n  try {\n    serviceLine = $('Extract Excel Response').first().json.extractedData?.serviceLine || '';\n  } catch (e) {}\n}\nif (!serviceLine) {\n  try {\n    serviceLine = $('Extract Word Response').first().json.extractedData?.serviceLine || '';\n  } catch (e) {}\n}\n\n// Normalize service line variations\n// Use 'install' and 'fab' as substrings so we match \"Install\", \"Installation\",\n// \"Fab\", \"Fabrication\", \"Fab & Install\", etc.\nconst normalized = serviceLine.trim().toLowerCase();\nconst hasDesign  = normalized.includes('design');\nconst hasFab     = normalized.includes('fab');\nconst hasInstall = normalized.includes('install');\n\nif (hasDesign && hasFab) {\n  serviceLine = 'Design + Fabrication';\n} else if (hasFab && hasInstall) {\n  serviceLine = 'Fabrication + Installation';\n} else if (hasFab) {\n  serviceLine = 'Fabrication Only';\n} else if (hasDesign) {\n  serviceLine = 'Design Only';\n}\n\nreturn [{ json: { serviceLine } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        -32
+      ],
+      "id": "57bc0aa1-e714-4174-b1db-27b78715b6a1",
+      "name": "Set Service Line"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binaryData = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst base64 = binaryData.toString('base64');\nreturn [{ json: { base64Data: base64, mimeType: \"application/pdf\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -16
+      ],
+      "id": "3033035e-228a-4895-bff3-d7e0156a5a8b",
+      "name": "Convert PDF to Base64"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst parseDeadline = (raw) => {\n  if (!raw) return '';\n  let s = String(raw).trim();\n\n  // Strip everything after \"by\", \"at\", \"@\", or a comma+time\n  s = s.replace(/\\s+(by|at|@)\\s+.*$/i, '');\n  s = s.replace(/,\\s*\\d{1,2}:\\d{2}.*$/i, '');\n  s = s.replace(/\\s+\\d{1,2}:\\d{2}\\s*(am|pm)?.*$/i, '');\n\n  // Try native Date parse\n  const d = new Date(s);\n  if (!isNaN(d.getTime())) {\n    return d.toISOString().split('T')[0]; // YYYY-MM-DD\n  }\n  return '';\n};\n\nreturn items.map(item => {\n  const extracted = item.json.extractedData || {};\n  const rawDeadline = extracted.submissionDeadline || '';\n  const normalizedDeadline = parseDeadline(rawDeadline);\n\n  return {\n    json: {\n      ...item.json,\n      extractedData: {\n        ...extracted,\n        submissionDeadline: normalizedDeadline,          // clean ISO date for Airtable\n        submissionDeadlineRaw: rawDeadline,              // original string preserved\n      },\n      submissionDeadlineDate: normalizedDeadline,\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2448,
+        -16
+      ],
+      "id": "2134ba60-07b4-441e-984c-6173cac2e9c1",
+      "name": "Fix Date Format"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: \"Assemble Prompt v3\"\n *\n * Builds the full GPT-4o prompt for proposal generation.\n * v3 additions:\n *   - Supplementary context section (from supporting documents)\n *   - Cover letter generation instructions (prepended to proposal)\n *\n * Token budget: ~25K input to stay under 30K TPM limit.\n * Allocation: system ~500, RFP ~2K, supplementary ~3K, Airtable ~8K,\n *             instructions ~4K, cover letter ~500 = ~18K input, ~10K output.\n */\n\nconst merged = $input.first().json;\n\n// ---- Helper: find specific boilerplate entries ----\nfunction findBP(name) {\n  const bp = merged.boilerplate || [];\n  const match = bp.find(b => b.section && b.section.toLowerCase().includes(name.toLowerCase()));\n  return match ? match.content : '';\n}\n\n// ---- Truncation helpers (same as v2) ----\nfunction truncate(str, maxChars) {\n  if (!str) return '';\n  str = String(str);\n  return str.length > maxChars ? str.substring(0, maxChars) + '...' : str;\n}\n\nfunction capList(arr, max) {\n  return (arr || []).slice(0, max);\n}\n\n// ---- Extract key data ----\nconst rfp = merged.extractedData || {};\nconst serviceLine = merged.serviceLine || 'Design + Fabrication';\n\n// ---- Build team bios section (capped at 5, truncated) ----\nconst teamSection = capList(merged.teamBios, 5).map(t =>\n  `- ${t.name}, ${t.title}${t.role ? ' (' + t.role + ')' : ''}${t.certifications ? ' [' + t.certifications + ']' : ''}\\n  Bio: ${truncate(t.bio, 400)}`\n).join('\\n');\n\n// ---- Build references section (capped at 5) ----\nconst refsSection = capList(merged.references, 5).map(r =>\n  `- ${r.client} — ${r.project}${r.year ? ' (' + r.year + ')' : ''}${r.tier ? ' [' + r.tier + ']' : ''}\\n  ${truncate(r.description, 300)}\\n  Contact: ${r.contactName}${r.contactEmail ? ', ' + r.contactEmail : ''}${r.contactPhone ? ', ' + r.contactPhone : ''}`\n).join('\\n');\n\n// ---- Build portfolio section (capped at 5) ----\nconst portfolioSection = capList(merged.portfolio, 5).map(p => {\n  let entry = `- ${p.project}${p.client ? ' (Client: ' + p.client + ')' : ''}`;\n  if (p.location) entry += `\\n  Location: ${p.location}`;\n  if (p.gc) entry += ` | GC: ${p.gc}`;\n  if (p.projectSize) entry += `\\n  Project Size: ${p.projectSize}`;\n  if (p.scopeOfServices) entry += `\\n  Scope of Services: ${p.scopeOfServices}`;\n  if (p.designValue) entry += ` | Design Value: ${p.designValue}`;\n  if (p.fabricationValue) entry += ` | Fabrication Value: ${p.fabricationValue}`;\n  if (p.status) entry += `\\n  Status: ${p.status}`;\n  entry += `\\n  ${truncate(p.summary, 300)}`;\n  return entry;\n}).join('\\n');\n\n// ---- Build schedule section ----\nconst scheduleSection = capList(merged.schedules, 3).map(s =>\n  `Template: ${s.template}\\nPhases: ${truncate(s.phases, 500)}\\nDuration: ${s.totalDuration || 'TBD'}`\n).join('\\n---\\n');\n\n// ---- Build rates section ----\nconst ratesSection = capList(merged.rates, 10).map(r =>\n  `- ${r.role}: ${r.rate}${r.notes ? ' (' + r.notes + ')' : ''}`\n).join('\\n');\n\n// ---- Boilerplate entries (only the 4 we need, same as v2) ----\nconst firmOverviewBP = findBP('firm overview') || findBP('overview');\nconst missionBP = findBP('mission');\nconst firmHistoryBP = findBP('firm history') || findBP('history');\nconst disputesBP = findBP('dispute');\n\n// ---- v3: Build supplementary context section ----\nlet supplementarySection = '';\nif (merged.hasSupplementary && merged.supplementarySummaries.length > 0) {\n  supplementarySection = '\\n=== SUPPLEMENTARY DOCUMENTS ===\\n';\n  supplementarySection += 'The following documents were included with the RFP package. Use this context to make the proposal more specific, informed, and tailored:\\n\\n';\n\n  for (const summary of merged.supplementarySummaries) {\n    supplementarySection += `[File: ${summary.fileName}] (${summary.fileType})\\n`;\n    supplementarySection += `Summary: ${truncate(summary.summary, 500)}\\n`;\n\n    if (summary.relevantDetails && summary.relevantDetails.length > 0) {\n      supplementarySection += `Key details:\\n`;\n      for (const detail of summary.relevantDetails.slice(0, 5)) {\n        supplementarySection += `  - ${truncate(detail, 200)}\\n`;\n      }\n    }\n\n    if (summary.budgetInfo && summary.budgetInfo !== 'null') {\n      supplementarySection += `Budget info: ${truncate(summary.budgetInfo, 300)}\\n`;\n    }\n    if (summary.siteInfo && summary.siteInfo !== 'null') {\n      supplementarySection += `Site info: ${truncate(summary.siteInfo, 300)}\\n`;\n    }\n    if (summary.technicalSpecs && summary.technicalSpecs !== 'null') {\n      supplementarySection += `Technical specs: ${truncate(summary.technicalSpecs, 300)}\\n`;\n    }\n    if (summary.scheduleInfo && summary.scheduleInfo !== 'null') {\n      supplementarySection += `Schedule info: ${truncate(summary.scheduleInfo, 300)}\\n`;\n    }\n\n    supplementarySection += '\\n';\n  }\n}\n\n// ---- Assemble the full prompt ----\nconst prompt = `You are a proposal writer for Outer Image LLC, a Brooklyn-based WBE-certified signage design, fabrication, and implementation studio located at 226 42nd Street, Brooklyn, NY 11232. Phone: 212.661.2124. Website: www.outerimage.com.\n\nGenerate a complete proposal response for the following RFP. The proposal MUST begin with a Cover Letter, followed by the standard 7-section proposal template.\n\n=== RFP DATA ===\nIssuer: ${rfp.issuer || 'Unknown'}\nProject Title: ${rfp.projectTitle || 'Unknown'}\nSubmission Deadline: ${rfp.submissionDeadline || 'TBD'}\nService Line: ${serviceLine}\nScope of Work: ${truncate(rfp.scopeOfWork, 1500)}\nEvaluation Criteria: ${truncate(rfp.evaluationCriteria, 500)}\nRequired Certifications: ${rfp.requiredCertifications || 'None specified'}\nBudget Range: ${rfp.budgetRange || 'Not specified'}\nKey Requirements: ${Array.isArray(rfp.keyRequirements) ? rfp.keyRequirements.join('; ') : (rfp.keyRequirements || 'None specified')}\n${supplementarySection}\n=== AIRTABLE CONTENT LIBRARY ===\n\n--- TEAM BIOS ---\n${teamSection || 'No team bios available.'}\n\n--- CLIENT REFERENCES ---\n${refsSection || 'No references available.'}\n\n--- PORTFOLIO PROJECTS ---\n${portfolioSection || 'No portfolio projects available.'}\n\n--- PROJECT SCHEDULE TEMPLATES ---\n${scheduleSection || 'No schedule templates available.'}\n\n--- RATE SCHEDULES ---\n${ratesSection || 'No rate schedules available.'}\n\n--- BOILERPLATE: FIRM OVERVIEW ---\n${truncate(firmOverviewBP, 1000) || 'Not available.'}\n\n--- BOILERPLATE: MISSION ---\n${truncate(missionBP, 500) || 'Not available.'}\n\n--- BOILERPLATE: FIRM HISTORY ---\n${truncate(firmHistoryBP, 500) || 'Not available.'}\n\n--- BOILERPLATE: DISPUTES ---\n${truncate(disputesBP, 300) || 'Not available.'}\n\n=== PROPOSAL INSTRUCTIONS ===\n\nGenerate the proposal in markdown format. Start with ## Cover Letter, then continue with the standard sections.\n\n## Cover Letter\nWrite a professional cover letter. Include:\n- The current date (use the submission deadline date if available, otherwise today's date)\n- Addressed to the RFP issuer organization\n- Reference the project title and any RFP number if available\n- Opening paragraph: Express Outer Image's enthusiasm and interest in the project\n- Middle paragraph: Highlight Outer Image's most relevant qualifications — WBE certification, Brooklyn-based studio, and 2-3 specific projects from the portfolio that relate to this RFP's sector. Reference the supplementary documents if they reveal specific site conditions or requirements\n- Closing paragraph: Mention the key team members who would lead this project, express confidence, and provide contact information\n- Sign off: \"Sincerely,\" followed by the lead team member's name and title, then \"Outer Image LLC\"\n- Keep the cover letter to approximately one page (300-400 words)\n\n## 1. Firm Overview\nWrite exactly 3 paragraphs:\n- Paragraph 1: Use the Firm Overview boilerplate as the foundation (adapt, don't copy verbatim)\n- Paragraph 2: Expand on Outer Image's capabilities relevant to this RFP's service line (${serviceLine})\n- Paragraph 3: ONE closing paragraph that references ONLY projects from the client's sector. If the client is corporate/commercial, reference only corporate projects. If healthcare, only healthcare. If government/municipal, only government projects. Do NOT mix sectors.\n\n## 2. Value to [Client Name]\nWrite 2-3 paragraphs tailored specifically to the RFP issuer explaining why Outer Image is uniquely positioned for this project. Reference specific details from the RFP scope of work and any supplementary documents. Address evaluation criteria directly.\n\n## 3. Corporate Information\n\n### 3.21 Firm History\nUse the Firm History boilerplate. Keep to 1 paragraph.\n\n### 3.22 Office Location\n226 42nd Street, Brooklyn, NY 11232. Mention proximity/accessibility to the project location if known from the RFP or supplementary documents.\n\n### 3.23 Project Team\nList the team members from the bios provided. For each: Name, Title, and a 2-sentence summary of their relevant experience. Match team to the service line.\n\n### 3.24 Disputes\nUse the Disputes boilerplate. If it says \"none\", state clearly: \"Outer Image LLC has no record of disputes, litigation, or contract terminations.\"\n\n### 3.25 Mission\nUse the Mission boilerplate. Keep to 1 paragraph.\n\n## 4. Project Approach\n\n### 4.26 Unique Systems\nDescribe Outer Image's proprietary approach to signage systems for this project type.\n\n### 4.27 Wayfinding Design\nExplain the wayfinding methodology. If supplementary documents include site plans or maps, reference specific site conditions.\n\n### 4.28 Stakeholder Input\nDescribe the stakeholder engagement process.\n\n### 4.29 Cost Management\nExplain cost control approach. If budget information is available from the RFP or supplementary docs, reference it.\n\n### 4.30 Coordination\nDescribe coordination with other contractors/consultants. If a GC or other parties are mentioned in supplementary docs, reference them.\n\n### 4.31 Quality Assurance\nDescribe QA/QC procedures.\n\n### 4.32 CAD/Revit Deliverables\nList standard deliverable formats.\n\n### 4.33 Internal Structure\nDescribe the project management structure.\n\n### 4.34 Proposed Fee\nReference the rate schedule data. Present as a summary, not a line-item breakdown.\n\n## 5.2 Proposed Schedule\nCreate a markdown table with columns: | Activity | Days to Complete | Anticipated Dates |\nBase this on the schedule template data. Include at minimum: Design Development, Client Review, Fabrication Drawings, Fabrication, Installation.\n\n## 5.03 Project Experience\nList up to 5 relevant projects from the portfolio. For each project, use this EXACT compact format with NO blank lines between fields within a project:\n**[Project Name]**\nClient: [Client Name]\nLocation: [Location]\nGC: [General Contractor]\nStatus: [Status]\nProject Size: [Size]\nScope of Services: [Scope]\nDesign Value: [Value]\nFabrication Value: [Value]\n[1-2 sentence description]\n\nSeparate each project with ONE blank line.\n\n=== FORMATTING RULES ===\n1. Use markdown headings: ## for main sections, ### for subsections\n2. Do NOT wrap the output in code fences (\\`\\`\\`markdown or \\`\\`\\`)\n3. Start the output with ## Cover Letter\n4. Use markdown table syntax for section 5.2 (pipes and dashes)\n5. Bold text with **double asterisks**\n6. No bullet points in section 5.03 — use the compact format specified above\n7. Keep consecutive lines in section 5.03 with no blank lines between fields within a project\n8. Reference supplementary document details naturally — do NOT just list them\n9. The cover letter should feel personal and specific, not generic\n10. Total output should be approximately 3,000-4,000 words`;\n\nreturn [{\n  json: {\n    prompt,\n    model: 'gpt-4o',\n    maxTokens: 10000,\n    temperature: 0.7,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        -32
+      ],
+      "id": "52cec622-e3e0-4fd1-a604-d4caaf4afb55",
+      "name": "Assemble Prompt v3"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: \"Merge All Content v3\"\n *\n * Combines:\n *   - Primary RFP extracted data (from Gemini Parse PDF)\n *   - Airtable content (team bios, references, portfolio, etc.)\n *   - Supplementary file summaries (new in v3)\n *\n * This is the v3 version of v2's \"Merge Content1\" node.\n * Same Airtable field mappings, plus supplementary context.\n */\n\n// ---- Primary RFP data (same as v2) ----\nlet extractedData = {};\ntry {\n  extractedData = $('Extract Gemini Response').first().json.extractedData || {};\n} catch (e) {}\n\nlet serviceLine = '';\ntry {\n  serviceLine = $('Set Service Line').first().json.serviceLine || '';\n} catch (e) {}\n\n// ---- Airtable content (same as v2) ----\nlet teamBios = [];\ntry {\n  teamBios = $('Fetch Team Bios').all().map(i => ({\n    name: i.json.Name || i.json['Name'] || '',\n    title: i.json.Title || i.json['Title'] || '',\n    role: i.json.Role || i.json['Role'] || '',\n    bio: i.json['Bio (Short)'] || i.json['Bio (Full)'] || '',\n    certifications: i.json.Certifications || i.json['Certifications'] || '',\n  }));\n} catch (e) {}\n\nlet references = [];\ntry {\n  references = $('Fetch Client References').all().map(i => ({\n    client: i.json['Client Name'] || '',\n    project: i.json['Project Name'] || '',\n    description: i.json['Project Description'] || '',\n    contactName: i.json['Contact Name'] || '',\n    contactEmail: i.json['Contact Email'] || i.json['Contact Info'] || '',\n    contactPhone: i.json['Contact Phone'] || '',\n    year: i.json['Year'] || '',\n    tier: i.json['Client Tier'] || '',\n  }));\n} catch (e) {}\n\nlet portfolio = [];\ntry {\n  portfolio = $('Fetch Portfolio').all().map(i => ({\n    project: i.json['Project Name'] || '',\n    client: i.json['Client'] || i.json['Client Name'] || '',\n    summary: i.json['Summary'] || '',\n    location: i.json['Location'] || '',\n    gc: i.json['GC'] || i.json['General Contractor'] || '',\n    projectSize: i.json['Project Size'] || '',\n    scopeOfServices: i.json['Scope of Services'] || '',\n    designValue: i.json['Design Value'] || '',\n    fabricationValue: i.json['Fabrication Value'] || '',\n    status: i.json['Status'] || '',\n    completionDate: i.json['Completion Date'] || '',\n    tier: i.json['Client Tier'] || '',\n    tags: i.json['Project Type Tags'] || '',\n  }));\n} catch (e) {}\n\nlet boilerplate = [];\ntry {\n  boilerplate = $('Fetch Boilerplate Content').all().map(i => ({\n    section: i.json['Section Name'] || '',\n    content: i.json['Content'] || '',\n  }));\n} catch (e) {}\n\nlet schedules = [];\ntry {\n  schedules = $('Fetch Project Schedules').all().map(i => ({\n    template: i.json['Template Name'] || '',\n    phases: i.json['Phases'] || '',\n    totalDuration: i.json['Total Duration'] || '',\n    notes: i.json['Notes'] || '',\n  }));\n} catch (e) {}\n\nlet rates = [];\ntry {\n  rates = $('Fetch Rate Schedules').all().map(i => ({\n    role: i.json['Role / Line Item'] || '',\n    rate: i.json['Rate'] || '',\n    notes: i.json['Notes'] || '',\n  }));\n} catch (e) {}\n\n// ---- v3: Supplementary file summaries ----\nlet supplementarySummaries = [];\ntry {\n  const summaryData = $('Collect Supplementary Summaries').first().json;\n  supplementarySummaries = summaryData.supplementarySummaries || [];\n} catch (e) {}\n\n// ---- Assemble merged payload ----\nreturn [{\n  json: {\n    // RFP data\n    extractedData,\n    serviceLine,\n\n    // Airtable content\n    teamBios,\n    references,\n    portfolio,\n    boilerplate,\n    schedules,\n    rates,\n\n    // v3: Supplementary context\n    supplementarySummaries,\n    hasSupplementary: supplementarySummaries.length > 0,\n\n    // Metadata\n    version: '3.0',\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4448,
+        -32
+      ],
+      "id": "ae125298-234d-488d-ab93-bec46a11ce8b",
+      "name": "Merge All Content v3"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app9edcpFf8yVarSQ",
+          "mode": "list",
+          "cachedResultName": "Outer Image — RFP Content",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbljQUJF1jnELeoZq",
+          "mode": "list",
+          "cachedResultName": "Project Schedules",
+          "cachedResultUrl": "https://airtable.com/app9edcpFf8yVarSQ/tbljQUJF1jnELeoZq"
+        },
+        "filterByFormula": "={Service Line} = \"{{ $('Set Service Line').item.json.serviceLine }}\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        4144,
+        -32
+      ],
+      "id": "db7d3add-ce32-486d-a630-770c56192fc9",
+      "name": "Fetch Project Schedules",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "8Cu5HSXIOw5u9ir3",
+          "name": "Airtable OAuth2API agiledevs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "061cf239-ba51-47a8-ba8b-e62ad4b37fc4",
+              "leftValue": "={{ $('Webhook (Trigger)').item.json.body.fileType }}",
+              "rightValue": "docx",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1072,
+        624
+      ],
+      "id": "841a8cdc-2497-496c-a3f8-33b92dc12b62",
+      "name": "Route if Word"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst text = input.content?.parts?.[0]?.text || input.text || '';\nconst cleaned = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst parsed = JSON.parse(cleaned);\n\nreturn [{ json: { extractedData: parsed } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        592
+      ],
+      "id": "fa330d79-fa97-4fb9-85b5-a998b61b9b4d",
+      "name": "Extract Word Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook (Trigger)').first().json.body;\nconst extractedText = body.extractedText || '';\nconst prompt = `Extract structured data from this RFP document. Return ONLY valid JSON with no markdown formatting, no code fences, and no extra text. Use this exact structure: {\"issuer\": \"\", \"projectTitle\": \"\", \"submissionDeadline\": \"\", \"scopeOfWork\": \"\", \"evaluationCriteria\": \"\", \"requiredCertifications\": \"\", \"budgetRange\": \"\", \"serviceLine\": \"\", \"requiredSections\": [], \"keyRequirements\": []}\n\nFor serviceLine, choose exactly one of these four values using these rules:\n- \"Design + Fabrication\": RFP requests BOTH design/wayfinding services AND fabrication, manufacturing, or installation of signs\n- \"Design Only\": RFP requests design or wayfinding services only, with NO mention of fabrication or manufacturing\n- \"Fabrication Only\": RFP requests manufacturing or building of signs only, with no design work\n- \"Fabrication + Installation\": RFP requests fabrication AND installation but NO design services\nWhen in doubt, look for words like \"fabrication\", \"manufacturing\", \"production\", \"installation of signs\" — if present alongside design, use \"Design + Fabrication\".\n\nDocument content:\n${extractedText}`;\n\nreturn [{\n  json: {\n    prompt,\n    extractedText,\n    fileName: body.fileName\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        624
+      ],
+      "id": "4987f1f4-7a24-421b-b7a3-e2c183109c12",
+      "name": "Format Word Text"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        624
+      ],
+      "id": "4ea56cbd-097a-484e-b443-fed6ca138212",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aB6rkM4Lk507J9up",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: \"Parse Metadata\"\n *\n * Receives the webhook payload from the v3 portal.\n * Separates primary RFP info from supplementary files.\n * Outputs structured data for downstream nodes.\n *\n * Place this node immediately after the Webhook trigger.\n */\n\nconst items = $input.all();\nconst item = items[0].json;\n\n// Primary RFP info (same fields as v2)\nconst primaryRfp = {\n  recordId: item.recordId,\n  fileUrl: item.fileUrl,\n  fileName: item.fileName,\n  fileType: item.fileType,\n  callbackUrl: item.callbackUrl,\n  extractedText: item.extractedText || null,\n  triggeredAt: item.triggeredAt,\n};\n\n// v3: Supplementary files\nconst supplementaryFiles = item.supplementaryFiles || [];\nconst fileCount = item.fileCount || 1;\nconst version = item.version || \"2.0\";\n\n// Prioritize supplementary files for processing:\n// PDFs and spreadsheets first (most useful context), then documents, then images\nconst priorityOrder = { pdf: 1, spreadsheet: 2, document: 3, image: 4, other: 5 };\nconst sortedSupplementary = [...supplementaryFiles].sort(\n  (a, b) => (priorityOrder[a.fileType] || 5) - (priorityOrder[b.fileType] || 5)\n);\n\n// Cap at 5 supplementary files to stay within token budget\nconst cappedSupplementary = sortedSupplementary.slice(0, 5);\n\nreturn [{\n  json: {\n    primaryRfp,\n    supplementaryFiles: cappedSupplementary,\n    supplementaryCount: supplementaryFiles.length,\n    processedCount: cappedSupplementary.length,\n    skippedCount: Math.max(0, supplementaryFiles.length - 5),\n    fileCount,\n    version,\n    hasSupplementary: cappedSupplementary.length > 0,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        104,
+        0
+      ],
+      "id": "44ed28bc-bdb8-4015-904a-e6b1ce284e15",
+      "name": "Parse Metadata"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: \"Process Supplementary Files\"\n *\n * Takes the list of supplementary files from Parse Metadata\n * and outputs one item per file for the Gemini summarization loop.\n *\n * Place this node after \"Parse Metadata\", connected to a Loop Over Items\n * that feeds into the Gemini Summarize node.\n *\n * If there are no supplementary files, outputs an empty array\n * so the downstream merge still works.\n */\n\nconst metadata = $('Parse Metadata').first().json;\nconst supplementaryFiles = metadata.supplementaryFiles || [];\n\nif (supplementaryFiles.length === 0) {\n  // No supplementary files — output a single item with empty context\n  return [{\n    json: {\n      hasFiles: false,\n      supplementarySummaries: [],\n    }\n  }];\n}\n\n// Output one item per supplementary file for the loop\nreturn supplementaryFiles.map((file, index) => ({\n  json: {\n    hasFiles: true,\n    fileIndex: index,\n    fileName: file.name,\n    fileType: file.fileType,\n    fileUrl: file.url,\n    mimeType: file.type,\n    fileSize: file.size,\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        312,
+        900
+      ],
+      "id": "d22b0b75-29bd-4a82-a0ec-2311a10c969a",
+      "name": "Process Supplementary Files"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        576,
+        900
+      ],
+      "id": "4038e382-1b5b-4aa9-8151-474c5fb2a388",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fileUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        850,
+        1000
+      ],
+      "id": "e1c1697d-7b43-4df3-af3f-d38a34b646b9",
+      "name": "Download Supplementary File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binaryData = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst base64 = binaryData.toString('base64');\nconst mimeType = $input.first().binary.data.mimeType || 'application/octet-stream';\nconst loopItem = $('Loop Over Items').first().json;\n\nreturn [{\n  json: {\n    base64Data: base64,\n    mimeType,\n    fileName: loopItem.fileName || 'supplementary',\n    fileType: loopItem.fileType || 'other',\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        1000
+      ],
+      "id": "00a0ae6d-6d60-4629-9464-04f56cc74009",
+      "name": "Convert Supplementary Base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [\n      {\n        \"inline_data\": {\n          \"mime_type\": \"{{ $json.mimeType }}\",\n          \"data\": \"{{ $json.base64Data }}\"\n        }\n      },\n      {\n        \"text\": \"This document accompanies an RFP for a signage/wayfinding project. Analyze it and extract useful context that would help write a strong proposal response. Return ONLY valid JSON with no markdown formatting, no code fences, and no extra text. Use this exact structure: {\\\"fileName\\\": \\\"{{ $json.fileName }}\\\", \\\"fileType\\\": \\\"{{ $json.fileType }}\\\", \\\"summary\\\": \\\"2-3 sentence summary of what this document contains\\\", \\\"relevantDetails\\\": [\\\"Key detail 1\\\", \\\"Key detail 2\\\"], \\\"budgetInfo\\\": \\\"any budget or pricing info found, or null\\\", \\\"siteInfo\\\": \\\"any site or location details found, or null\\\", \\\"technicalSpecs\\\": \\\"any technical specifications found, or null\\\", \\\"scheduleInfo\\\": \\\"any timeline or schedule info found, or null\\\"}\"\n      }\n    ]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1350,
+        1000
+      ],
+      "id": "868ffa32-6659-4a36-b9c9-f85282780835",
+      "name": "Gemini Summarize Supplementary",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "68tlIYub0MfgFond",
+          "name": "Gemini API Key"
+        },
+        "googlePalmApi": {
+          "id": "aB6rkM4Lk507J9up",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: \"Collect Supplementary Summaries\"\n *\n * Runs after the Loop Over Items for supplementary file processing.\n * Collects all Gemini summaries into a single array.\n *\n * Place this node after the loop's \"done\" output.\n */\n\nconst items = $input.all();\nconst summaries = [];\n\nfor (const item of items) {\n  try {\n    // The Gemini response comes back in candidates[0].content.parts[0].text\n    let rawText = '';\n\n    if (item.json.candidates) {\n      rawText = item.json.candidates[0]?.content?.parts?.[0]?.text || '';\n    } else if (item.json.extractedSummary) {\n      // If there's an Extract node in between\n      rawText = typeof item.json.extractedSummary === 'string'\n        ? item.json.extractedSummary\n        : JSON.stringify(item.json.extractedSummary);\n    } else if (item.json.supplementarySummaries) {\n      // Pass-through from the \"no files\" branch\n      continue;\n    }\n\n    if (!rawText) continue;\n\n    // Clean and parse\n    let cleaned = rawText.trim();\n    cleaned = cleaned.replace(/^```(?:json)?\\s*\\n?/i, '');\n    cleaned = cleaned.replace(/\\n?```\\s*$/i, '');\n\n    const parsed = JSON.parse(cleaned);\n\n    // Truncate summary to ~500 tokens (~2000 chars) to stay within budget\n    if (parsed.summary && parsed.summary.length > 2000) {\n      parsed.summary = parsed.summary.substring(0, 2000) + '...';\n    }\n    if (parsed.relevantDetails && Array.isArray(parsed.relevantDetails)) {\n      parsed.relevantDetails = parsed.relevantDetails.slice(0, 5);\n    }\n\n    summaries.push(parsed);\n  } catch (e) {\n    // If parsing fails, create a minimal summary from what we have\n    summaries.push({\n      fileName: item.json.fileName || 'Unknown file',\n      fileType: item.json.fileType || 'other',\n      summary: 'File was processed but summary extraction failed.',\n      relevantDetails: [],\n      budgetInfo: null,\n      siteInfo: null,\n      technicalSpecs: null,\n      scheduleInfo: null,\n    });\n  }\n}\n\nreturn [{\n  json: {\n    supplementarySummaries: summaries,\n    summaryCount: summaries.length,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        800
+      ],
+      "id": "b0b82330-261b-416f-be1b-aac50c1503f0",
+      "name": "Collect Supplementary Summaries"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook (Trigger)": {
+      "main": [
+        [
+          {
+            "node": "Parse Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Status to Parsing": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Route by File Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by File Type": {
+      "main": [
+        [
+          {
+            "node": "Convert PDF to Base64",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route if Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Parse PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract Gemini Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Gemini Response": {
+      "main": [
+        [
+          {
+            "node": "Fix Date Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Extracted Data": {
+      "main": [
+        [
+          {
+            "node": "Set Service Line",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Generate Draft": {
+      "main": [
+        [
+          {
+            "node": "Deliver Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Team Bios": {
+      "main": [
+        [
+          {
+            "node": "Fetch Client References",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Client References": {
+      "main": [
+        [
+          {
+            "node": "Fetch Portfolio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Portfolio": {
+      "main": [
+        [
+          {
+            "node": "Fetch Boilerplate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Boilerplate": {
+      "main": [
+        [
+          {
+            "node": "Fetch Project Schedules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route if Excel": {
+      "main": [
+        [
+          {
+            "node": "Read Excel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route if Word",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Excel": {
+      "main": [
+        [
+          {
+            "node": "Format Excel Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Excel Text": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Extract Excel Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Excel Response": {
+      "main": [
+        [
+          {
+            "node": "Fix Date Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Service Line": {
+      "main": [
+        [
+          {
+            "node": "Fetch Team Bios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to Base64": {
+      "main": [
+        [
+          {
+            "node": "Gemini Parse PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fix Date Format": {
+      "main": [
+        [
+          {
+            "node": "Send Extracted Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Project Schedules": {
+      "main": [
+        [
+          {
+            "node": "Merge All Content v3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route if Word": {
+      "main": [
+        [
+          {
+            "node": "Format Word Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Word Response": {
+      "main": [
+        [
+          {
+            "node": "Fix Date Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Word Text": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Extract Word Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Metadata": {
+      "main": [
+        [
+          {
+            "node": "Update Status to Parsing",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Process Supplementary Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Supplementary Files": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Collect Supplementary Summaries",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Supplementary File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Supplementary File": {
+      "main": [
+        [
+          {
+            "node": "Convert Supplementary Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Supplementary Base64": {
+      "main": [
+        [
+          {
+            "node": "Gemini Summarize Supplementary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Summarize Supplementary": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Supplementary Summaries": {
+      "main": [
+        [
+          {
+            "node": "Merge All Content v3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Prompt v3": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Generate Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Content v3": {
+      "main": [
+        [
+          {
+            "node": "Assemble Prompt v3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1367f18b-acf1-4e16-929f-e91322f95a80",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ece1384e5347fda07017394bf7802b71181b6cdfba2a9f61ec56ad187c46c4c"
+  },
+  "id": "GV1JScta0ymhnIua",
+  "tags": [
+    {
+      "name": "RFP v3"
+    }
+  ]
+}

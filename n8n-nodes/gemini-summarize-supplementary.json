@@ -1,0 +1,20 @@
+{
+  "_comment": "Gemini Summarize Supplementary — HTTP Request node configuration",
+  "_instructions": [
+    "Create an HTTP Request node in n8n with these settings:",
+    "1. Method: POST",
+    "2. URL: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $credentials.geminiApiKey }}",
+    "3. Body Type: JSON",
+    "4. Toggle the JSON Body field to Expression mode (fx)",
+    "5. Paste the jsonBody value below (without leading =)",
+    "",
+    "This node should be inside a Loop Over Items that iterates over",
+    "the output of 'Process Supplementary Files'.",
+    "",
+    "For IMAGE files: the inline_data approach works for images.",
+    "For PDF files: the inline_data approach works for PDFs.",
+    "For spreadsheets/docs: download + convert to base64 first."
+  ],
+
+  "jsonBody_expression": "{\n  \"contents\": [{\n    \"parts\": [\n      {\n        \"inline_data\": {\n          \"mime_type\": \"{{ $json.mimeType }}\",\n          \"data\": \"{{ $json.base64Data }}\"\n        }\n      },\n      {\n        \"text\": \"This document accompanies an RFP for a signage/wayfinding project. Analyze it and extract useful context that would help write a strong proposal response. Return ONLY valid JSON with no markdown formatting, no code fences, and no extra text. Use this exact structure: {\\\"fileName\\\": \\\"{{ $json.fileName }}\\\", \\\"fileType\\\": \\\"{{ $json.fileType }}\\\", \\\"summary\\\": \\\"2-3 sentence summary of what this document contains\\\", \\\"relevantDetails\\\": [\\\"Key detail 1\\\", \\\"Key detail 2\\\"], \\\"budgetInfo\\\": \\\"any budget or pricing info found, or null\\\", \\\"siteInfo\\\": \\\"any site or location details found, or null\\\", \\\"technicalSpecs\\\": \\\"any technical specifications found, or null\\\", \\\"scheduleInfo\\\": \\\"any timeline or schedule info found, or null\\\"}\"\n      }\n    ]\n  }]\n}"
+}
