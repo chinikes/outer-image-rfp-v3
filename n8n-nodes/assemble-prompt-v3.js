@@ -269,14 +269,18 @@ CRITICAL RULES FOR PROJECT EXPERIENCE:
 - The goal is to demonstrate relevant ${industry || 'sector'} experience through project selection. A proposal for a ${industry || 'specific sector'} client should showcase primarily ${industry || 'similar'} projects.
 
 ## 6. References
-List up to 5 client references from the CLIENT REFERENCES data above. For each reference, use this format:
+List client references from the CLIENT REFERENCES data above. For each reference, use this format:
 
-**[Client Name] — [Project Name]**${industry ? `\nPrioritize references whose Client Tier matches "${industry}". If fewer than 3 match, include the closest relevant references.` : ''}
+**[Client Name] — [Project Name]**
 **Contact:** [Contact Name], [Contact Email], [Contact Phone]
 **Year:** [Year]
 [1-sentence project description]
-
-CRITICAL: ONLY use data from the CLIENT REFERENCES section. Do NOT invent contact names, emails, phone numbers, or project descriptions. If a field is missing, write "[Not provided]".
+${industry ? `\nPrioritize references whose Client Tier matches "${industry}". If fewer than 3 match, include the closest relevant references.` : ''}
+CRITICAL RULES FOR REFERENCES:
+- ONLY use data from the CLIENT REFERENCES section. Do NOT invent contact names, emails, phone numbers, or project descriptions.
+- NEVER duplicate a reference — each client/project pair may appear ONLY ONCE.
+- If a field is missing, write "[Not provided]".
+- List ALL available references (up to 5). If there are fewer than 5 references in the data, list only what exists — do NOT repeat entries to fill the count.
 
 === ZERO-HALLUCINATION POLICY (APPLIES TO THE ENTIRE PROPOSAL) ===
 These rules override everything else and apply to EVERY section — Firm Overview, Project Overview, Project Approach, Project Experience, and all others.
