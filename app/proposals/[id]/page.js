@@ -83,22 +83,32 @@ export default function ProposalViewPage() {
   };
 
   // Renumber subsection headings within content to match new section number.
-  // Handles both ### headings and **bold** headings with numeric prefixes.
+  // Handles ### headings, **bold** headings, and mixed formats with numeric prefixes.
   const renumberSubsections = (content, sectionNum) => {
+    // First pass: count ### matches to decide strategy
+    const hasH3 = /^###\s+\d+(?:\.\d+)?\s/m.test(content);
+    const hasBold = /^\*\*\d+(?:\.\d+)\s/m.test(content);
+
     let subCounter = 1;
-    // ### 3.21 Title → ### 1.1 Title
-    let result = content.replace(
-      /^(###\s+)\d+(?:\.\d+)?\s*/gm,
-      () => `### ${sectionNum}.${subCounter++} `
-    );
-    // **3.21 Title** → **1.1 Title** (bold-style subsections, only at line start)
-    if (subCounter === 1) {
-      // Only renumber bold-style if no ### headings were found
+    let result = content;
+
+    if (hasH3) {
+      // ### 3.21 Title → ### 1.1 Title
       result = result.replace(
-        /^(\*\*)\d+(?:\.\d+)\s+/gm,
-        (match, stars) => `${stars}${sectionNum}.${subCounter++} `
+        /^(###\s+)\d+(?:\.\d+)?\s*/gm,
+        () => `### ${sectionNum}.${subCounter++} `
       );
     }
+
+    if (hasBold) {
+      // **3.21 Title** → **1.1 Title** (bold-style subsections at line start)
+      let boldCounter = hasH3 ? subCounter : 1;
+      result = result.replace(
+        /^(\*\*)\d+(?:\.\d+)\s+/gm,
+        (match, stars) => `${stars}${sectionNum}.${boldCounter++} `
+      );
+    }
+
     return result;
   };
 
@@ -374,7 +384,7 @@ export default function ProposalViewPage() {
       const sectionContent = document.createElement("div");
       sectionContent.style.marginBottom = "20px";
 
-      let rawContent = convertMarkdownTables(section.content || "", { forWord: false });
+      let rawContent = convertMarkdownTables(renumberSubsections(section.content || "", idx + 1), { forWord: false });
       const tableBlocks = [];
       rawContent = rawContent.replace(/<table[\s\S]*?<\/table>/gi, (m) => {
         tableBlocks.push(m);
@@ -487,7 +497,7 @@ export default function ProposalViewPage() {
     proposalSections.forEach((s, idx) => {
       html += `<h2>${idx + 1}. ${s.title}</h2>`;
 
-      let sectionBody = convertMarkdownTables(s.content || "", { forWord: true });
+      let sectionBody = convertMarkdownTables(renumberSubsections(s.content || "", idx + 1), { forWord: true });
       const tableBlocks = [];
       sectionBody = sectionBody.replace(/<table[\s\S]*?<\/table>/gi, (m) => {
         tableBlocks.push(m);
@@ -886,7 +896,7 @@ export default function ProposalViewPage() {
                 className="text-sm text-gray-700 leading-[1.8]"
                 dangerouslySetInnerHTML={{
                   __html: (() => {
-                    let html = (currentSection?.content || "")
+                    let html = renumberSubsections(currentSection?.content || "", activeSection + 1)
                       .replace(/\r\n/g, "\n");
 
                     html = html.replace(
@@ -988,7 +998,7 @@ export default function ProposalViewPage() {
                   <div
                     className="text-sm text-gray-700 line-clamp-4"
                     dangerouslySetInnerHTML={{
-                      __html: (section.content || "")
+                      __html: renumberSubsections(section.content || "", i + 1)
                         .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
                         .replace(/\*(.+?)\*/g, "<em>$1</em>")
                         .substring(0, 200),
