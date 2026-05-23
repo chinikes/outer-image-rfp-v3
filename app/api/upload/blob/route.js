@@ -14,13 +14,6 @@ import { NextResponse } from "next/server";
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-// Increase body size limit for file uploads (default is 4.5MB)
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(request) {
   try {
     const formData = await request.formData();
