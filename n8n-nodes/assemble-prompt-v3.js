@@ -41,7 +41,15 @@ const teamSection = capList(merged.teamBios, 8).map(t =>
 ).join('\n');
 
 // ---- Build references section (sorted by tier relevance, capped at 5) ----
-const sortedRefs = [...(merged.references || [])].sort((a, b) => {
+// Deduplicate by client+project name to prevent GPT from seeing duplicate data
+const seenRefs = new Set();
+const uniqueRefs = [...(merged.references || [])].filter(r => {
+  const key = `${(r.client || '').toLowerCase()}|${(r.project || '').toLowerCase()}`;
+  if (seenRefs.has(key)) return false;
+  seenRefs.add(key);
+  return true;
+});
+const sortedRefs = uniqueRefs.sort((a, b) => {
   const aMatch = industry && a.tier && a.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
   const bMatch = industry && b.tier && b.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
   return bMatch - aMatch;
@@ -49,6 +57,15 @@ const sortedRefs = [...(merged.references || [])].sort((a, b) => {
 const refsSection = capList(sortedRefs, 5).map(r =>
   `- ${r.client} — ${r.project}${r.year ? ' (' + r.year + ')' : ''}${r.tier ? ' [Client Tier: ' + r.tier + ']' : ''}\n  ${truncate(r.description, 300)}\n  Contact: ${r.contactName}${r.contactEmail ? ', ' + r.contactEmail : ''}${r.contactPhone ? ', ' + r.contactPhone : ''}`
 ).join('\n');
+
+// ---- Pre-formatted references block (inserted verbatim into output) ----
+const preformattedRefs = capList(sortedRefs, 5).map(r => {
+  let block = `**${r.client || '[Not provided]'} — ${r.project || '[Not provided]'}**`;
+  block += `  \n**Contact:** ${r.contactName || '[Not provided]'}${r.contactEmail ? ', ' + r.contactEmail : ', [Not provided]'}${r.contactPhone ? ', ' + r.contactPhone : ', [Not provided]'}`;
+  block += `  \n**Year:** ${r.year || '[Not provided]'}`;
+  block += `  \n${truncate(r.description, 300) || 'Signage design and fabrication services.'}`;
+  return block;
+}).join('\n\n');
 
 // ---- Build portfolio section (sorted by relevance, capped at 5) ----
 // Sort: matching tier+service line first, then tier only, then service line only, then rest
@@ -269,18 +286,9 @@ CRITICAL RULES FOR PROJECT EXPERIENCE:
 - The goal is to demonstrate relevant ${industry || 'sector'} experience through project selection. A proposal for a ${industry || 'specific sector'} client should showcase primarily ${industry || 'similar'} projects.
 
 ## 6. References
-List client references from the CLIENT REFERENCES data above. For each reference, use this format:
+IMPORTANT: Copy the following references block EXACTLY as written below. Do NOT modify, reorder, duplicate, or add to these references. Include them verbatim:
 
-**[Client Name] — [Project Name]**
-**Contact:** [Contact Name], [Contact Email], [Contact Phone]
-**Year:** [Year]
-[1-sentence project description]
-${industry ? `\nPrioritize references whose Client Tier matches "${industry}". If fewer than 3 match, include the closest relevant references.` : ''}
-CRITICAL RULES FOR REFERENCES:
-- ONLY use data from the CLIENT REFERENCES section. Do NOT invent contact names, emails, phone numbers, or project descriptions.
-- NEVER duplicate a reference — each client/project pair may appear ONLY ONCE.
-- If a field is missing, write "[Not provided]".
-- List ALL available references (up to 5). If there are fewer than 5 references in the data, list only what exists — do NOT repeat entries to fill the count.
+${preformattedRefs || 'No references available.'}
 
 === ZERO-HALLUCINATION POLICY (APPLIES TO THE ENTIRE PROPOSAL) ===
 These rules override everything else and apply to EVERY section — Firm Overview, Project Overview, Project Approach, Project Experience, and all others.
