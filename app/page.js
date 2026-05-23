@@ -2,7 +2,24 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
+// Server-side blob upload helper — bypasses client token flow
+async function uploadToBlob(file, pathname) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("pathname", pathname);
+
+  const res = await fetch("/api/upload/blob", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Upload failed" }));
+    throw new Error(err.error || `Upload failed (${res.status})`);
+  }
+
+  return res.json();
+}
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -185,13 +202,9 @@ export default function UploadPage() {
         );
 
         try {
-          const blob = await upload(
-            `rfps/${timestamp}-${i}-${file.name}`,
+          const blob = await uploadToBlob(
             file,
-            {
-              access: "public",
-              handleUploadUrl: "/api/upload/blob-token",
-            }
+            `rfps/${timestamp}-${i}-${file.name}`
           );
 
           blobFiles.push({
