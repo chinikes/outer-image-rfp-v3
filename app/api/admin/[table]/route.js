@@ -3,8 +3,10 @@ export const revalidate = 0;
 import { NextResponse } from "next/server";
 import Airtable from "airtable";
 
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-  .base(process.env.AIRTABLE_BASE_ID);
+const isConfigured = process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID;
+const base = isConfigured
+  ? new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID)
+  : null;
 
 const tableMap = {
   "team-bios": "Team Bios",
@@ -16,6 +18,9 @@ const tableMap = {
 };
 
 export async function GET(req, { params }) {
+  if (!isConfigured) {
+    return NextResponse.json({ error: "Airtable not configured" }, { status: 503 });
+  }
   const tableName = tableMap[params.table];
   if (!tableName) {
     return NextResponse.json({ error: "Unknown table" }, { status: 400 });
@@ -34,6 +39,9 @@ export async function GET(req, { params }) {
 }
 
 export async function POST(req, { params }) {
+  if (!isConfigured) {
+    return NextResponse.json({ error: "Airtable not configured" }, { status: 503 });
+  }
   const tableName = tableMap[params.table];
   if (!tableName) {
     return NextResponse.json({ error: "Unknown table" }, { status: 400 });

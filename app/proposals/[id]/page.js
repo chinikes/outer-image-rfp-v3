@@ -4,6 +4,34 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
+// Pure helpers — defined outside component to avoid recreating on every render
+const stripNumberPrefix = (title) => title.replace(/^\d+(?:\.\d+)?\s*\.?\s*/, "");
+
+const renumberSubsections = (content, sectionNum) => {
+  const hasH3 = /^###\s+\d+(?:\.\d+)?\s/m.test(content);
+  const hasBold = /^\*\*\d+(?:\.\d+)\s/m.test(content);
+
+  let subCounter = 1;
+  let result = content;
+
+  if (hasH3) {
+    result = result.replace(
+      /^(###\s+)\d+(?:\.\d+)?\s*/gm,
+      () => `### ${sectionNum}.${subCounter++} `
+    );
+  }
+
+  if (hasBold) {
+    let boldCounter = hasH3 ? subCounter : 1;
+    result = result.replace(
+      /^(\*\*)\d+(?:\.\d+)\s+/gm,
+      (match, stars) => `${stars}${sectionNum}.${boldCounter++} `
+    );
+  }
+
+  return result;
+};
+
 export default function ProposalViewPage() {
   const params = useParams();
   const router = useRouter();
@@ -49,9 +77,6 @@ export default function ProposalViewPage() {
     return (fmtKey && ed[fmtKey]) || (rawKey && ed[rawKey]) || null;
   }, [proposal]);
 
-  // Strip leading number prefix like "1.", "4.26", "5.03 " from a section title
-  const stripNumberPrefix = (title) => title.replace(/^\d+(?:\.\d+)?\s*\.?\s*/, "");
-
   const parseSections = (draft) => {
     if (!draft) return [{ title: "Draft", content: "No draft generated yet." }];
 
@@ -80,36 +105,6 @@ export default function ProposalViewPage() {
     return sections.length > 0
       ? sections
       : [{ title: "Full Draft", content: draft }];
-  };
-
-  // Renumber subsection headings within content to match new section number.
-  // Handles ### headings, **bold** headings, and mixed formats with numeric prefixes.
-  const renumberSubsections = (content, sectionNum) => {
-    // First pass: count ### matches to decide strategy
-    const hasH3 = /^###\s+\d+(?:\.\d+)?\s/m.test(content);
-    const hasBold = /^\*\*\d+(?:\.\d+)\s/m.test(content);
-
-    let subCounter = 1;
-    let result = content;
-
-    if (hasH3) {
-      // ### 3.21 Title → ### 1.1 Title
-      result = result.replace(
-        /^(###\s+)\d+(?:\.\d+)?\s*/gm,
-        () => `### ${sectionNum}.${subCounter++} `
-      );
-    }
-
-    if (hasBold) {
-      // **3.21 Title** → **1.1 Title** (bold-style subsections at line start)
-      let boldCounter = hasH3 ? subCounter : 1;
-      result = result.replace(
-        /^(\*\*)\d+(?:\.\d+)\s+/gm,
-        (match, stars) => `${stars}${sectionNum}.${boldCounter++} `
-      );
-    }
-
-    return result;
   };
 
   const reassembleDraft = useCallback((sectionArray) => {
@@ -424,7 +419,7 @@ export default function ProposalViewPage() {
     };
 
     html2pdf().set(options).from(content).save();
-  }, [proposal, loadHtml2Pdf]);
+  }, [proposal, loadHtml2Pdf, effectiveDeadline]);
 
   const exportWord = useCallback(() => {
     if (!proposal) return;
@@ -536,7 +531,7 @@ export default function ProposalViewPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [proposal]);
+  }, [proposal, effectiveDeadline]);
 
   if (loading) {
     return (

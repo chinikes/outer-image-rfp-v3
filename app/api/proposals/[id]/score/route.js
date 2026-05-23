@@ -116,7 +116,7 @@ Respond ONLY with valid JSON, no additional text.`;
 
     // Validate the scoring data structure
     if (
-      !scoringData.overallScore ||
+      typeof scoringData.overallScore !== "number" ||
       !Array.isArray(scoringData.requirements) ||
       !Array.isArray(scoringData.strengths) ||
       !Array.isArray(scoringData.gaps) ||

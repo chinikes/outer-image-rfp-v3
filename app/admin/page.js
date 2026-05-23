@@ -57,9 +57,11 @@ export default function AdminPage() {
   };
 
   // Check session on load
-  if (!authenticated && typeof window !== "undefined" && sessionStorage.getItem("admin_auth") === "true") {
-    setAuthenticated(true);
-  }
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("admin_auth") === "true") {
+      setAuthenticated(true);
+    }
+  }, []);
 
   // Fetch dynamic service lines from Airtable
   useEffect(() => {
