@@ -21,6 +21,11 @@ try {
   serviceLine = $('Set Service Line').first().json.serviceLine || '';
 } catch (e) {}
 
+let industry = '';
+try {
+  industry = $('Set Service Line').first().json.industry || '';
+} catch (e) {}
+
 // ---- Airtable content (same as v2) ----
 let teamBios = [];
 try {
@@ -106,6 +111,7 @@ return [{
     // RFP data
     extractedData,
     serviceLine,
+    industry,
 
     // Airtable content
     teamBios,

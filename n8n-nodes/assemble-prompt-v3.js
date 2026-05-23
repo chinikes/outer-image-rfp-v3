@@ -40,14 +40,31 @@ const teamSection = capList(merged.teamBios, 8).map(t =>
   `- ${t.name}, ${t.title}${t.role ? ' (' + t.role + ')' : ''}${t.certifications ? ' [' + t.certifications + ']' : ''}\n  Bio: ${truncate(t.bio, 400)}`
 ).join('\n');
 
-// ---- Build references section (capped at 5) ----
-const refsSection = capList(merged.references, 5).map(r =>
-  `- ${r.client} — ${r.project}${r.year ? ' (' + r.year + ')' : ''}${r.tier ? ' [' + r.tier + ']' : ''}\n  ${truncate(r.description, 300)}\n  Contact: ${r.contactName}${r.contactEmail ? ', ' + r.contactEmail : ''}${r.contactPhone ? ', ' + r.contactPhone : ''}`
+// ---- Build references section (sorted by tier relevance, capped at 5) ----
+const sortedRefs = [...(merged.references || [])].sort((a, b) => {
+  const aMatch = industry && a.tier && a.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
+  const bMatch = industry && b.tier && b.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
+  return bMatch - aMatch;
+});
+const refsSection = capList(sortedRefs, 5).map(r =>
+  `- ${r.client} — ${r.project}${r.year ? ' (' + r.year + ')' : ''}${r.tier ? ' [Client Tier: ' + r.tier + ']' : ''}\n  ${truncate(r.description, 300)}\n  Contact: ${r.contactName}${r.contactEmail ? ', ' + r.contactEmail : ''}${r.contactPhone ? ', ' + r.contactPhone : ''}`
 ).join('\n');
 
-// ---- Build portfolio section (capped at 5) ----
-const portfolioSection = capList(merged.portfolio, 5).map(p => {
+// ---- Build portfolio section (sorted by relevance, capped at 5) ----
+// Sort: matching tier+service line first, then tier only, then service line only, then rest
+const sortedPortfolio = [...(merged.portfolio || [])].sort((a, b) => {
+  const aMatchTier = industry && a.tier && a.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
+  const bMatchTier = industry && b.tier && b.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
+  const slNorm = serviceLine.toLowerCase();
+  const aMatchSL = a.tags && String(a.tags).toLowerCase().includes(slNorm.split(' ')[0]) ? 1 : 0;
+  const bMatchSL = b.tags && String(b.tags).toLowerCase().includes(slNorm.split(' ')[0]) ? 1 : 0;
+  const aScore = aMatchTier * 2 + aMatchSL;
+  const bScore = bMatchTier * 2 + bMatchSL;
+  return bScore - aScore;
+});
+const portfolioSection = capList(sortedPortfolio, 5).map(p => {
   let entry = `- ${p.project}${p.client ? ' (Client: ' + p.client + ')' : ''}`;
+  if (p.tier) entry += ` [Client Tier: ${p.tier}]`;
   if (p.location) entry += `\n  Location: ${p.location}`;
   if (p.gc) entry += ` | GC: ${p.gc}`;
   if (p.projectSize) entry += `\n  Project Size: ${p.projectSize}`;
@@ -251,6 +268,16 @@ CRITICAL RULES FOR PROJECT EXPERIENCE:
   4. LAST: Any remaining projects to fill up to 5 total
 - The goal is to demonstrate relevant ${industry || 'sector'} experience through project selection. A proposal for a ${industry || 'specific sector'} client should showcase primarily ${industry || 'similar'} projects.
 
+## 6. References
+List up to 5 client references from the CLIENT REFERENCES data above. For each reference, use this format:
+
+**[Client Name] — [Project Name]**${industry ? `\nPrioritize references whose Client Tier matches "${industry}". If fewer than 3 match, include the closest relevant references.` : ''}
+**Contact:** [Contact Name], [Contact Email], [Contact Phone]
+**Year:** [Year]
+[1-sentence project description]
+
+CRITICAL: ONLY use data from the CLIENT REFERENCES section. Do NOT invent contact names, emails, phone numbers, or project descriptions. If a field is missing, write "[Not provided]".
+
 === ZERO-HALLUCINATION POLICY (APPLIES TO THE ENTIRE PROPOSAL) ===
 These rules override everything else and apply to EVERY section — Firm Overview, Project Overview, Project Approach, Project Experience, and all others.
 
@@ -292,7 +319,8 @@ These rules override everything else and apply to EVERY section — Firm Overvie
 6. No bullet points in section 5.03 — use the labeled field format specified above
 7. In section 5.03, end EVERY field line with two trailing spaces so markdown renders each on its own line. Format dollar amounts as currency (e.g., "$310,000")
 8. Reference supplementary document details naturally — do NOT just list them
-9. Total output should be approximately 2,500-3,500 words`;
+9. In section 6. References, end EVERY field line with two trailing spaces so each renders on its own line
+10. Total output should be approximately 2,500-4,000 words`;
 
 return [{
   json: {

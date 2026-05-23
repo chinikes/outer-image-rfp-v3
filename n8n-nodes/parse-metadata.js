@@ -27,6 +27,10 @@ const supplementaryFiles = item.supplementaryFiles || [];
 const fileCount = item.fileCount || 1;
 const version = item.version || "2.0";
 
+// v3.1: User-selected categorization
+const industry = item.industry || '';
+const serviceLine = item.serviceLine || '';
+
 // Prioritize supplementary files for processing:
 // PDFs and spreadsheets first (most useful context), then documents, then images
 const priorityOrder = { pdf: 1, spreadsheet: 2, document: 3, image: 4, other: 5 };
@@ -47,5 +51,8 @@ return [{
     fileCount,
     version,
     hasSupplementary: cappedSupplementary.length > 0,
+    // v3.1: Pass through user categorization for downstream nodes
+    industry,
+    serviceLine,
   }
 }];
