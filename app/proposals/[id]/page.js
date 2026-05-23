@@ -82,9 +82,33 @@ export default function ProposalViewPage() {
       : [{ title: "Full Draft", content: draft }];
   };
 
+  // Renumber subsection headings within content to match new section number.
+  // Handles both ### headings and **bold** headings with numeric prefixes.
+  const renumberSubsections = (content, sectionNum) => {
+    let subCounter = 1;
+    // ### 3.21 Title → ### 1.1 Title
+    let result = content.replace(
+      /^(###\s+)\d+(?:\.\d+)?\s*/gm,
+      () => `### ${sectionNum}.${subCounter++} `
+    );
+    // **3.21 Title** → **1.1 Title** (bold-style subsections, only at line start)
+    if (subCounter === 1) {
+      // Only renumber bold-style if no ### headings were found
+      result = result.replace(
+        /^(\*\*)\d+(?:\.\d+)\s+/gm,
+        (match, stars) => `${stars}${sectionNum}.${subCounter++} `
+      );
+    }
+    return result;
+  };
+
   const reassembleDraft = useCallback((sectionArray) => {
     return sectionArray
-      .map((s, i) => `## ${i + 1}. ${stripNumberPrefix(s.title)}\n${s.content || ""}`)
+      .map((s, i) => {
+        const num = i + 1;
+        const updatedContent = renumberSubsections(s.content || "", num);
+        return `## ${num}. ${stripNumberPrefix(s.title)}\n${updatedContent}`;
+      })
       .join("\n\n");
   }, []);
 
