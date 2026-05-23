@@ -49,6 +49,9 @@ export default function ProposalViewPage() {
     return (fmtKey && ed[fmtKey]) || (rawKey && ed[rawKey]) || null;
   }, [proposal]);
 
+  // Strip leading number prefix like "1.", "4.26", "5.03 " from a section title
+  const stripNumberPrefix = (title) => title.replace(/^\d+(?:\.\d+)?\s*\.?\s*/, "");
+
   const parseSections = (draft) => {
     if (!draft) return [{ title: "Draft", content: "No draft generated yet." }];
 
@@ -65,10 +68,10 @@ export default function ProposalViewPage() {
       if (!part.trim()) continue;
       const newlineIdx = part.indexOf("\n");
       if (newlineIdx === -1) {
-        sections.push({ title: part.trim(), content: "" });
+        sections.push({ title: stripNumberPrefix(part.trim()), content: "" });
       } else {
         sections.push({
-          title: part.substring(0, newlineIdx).trim(),
+          title: stripNumberPrefix(part.substring(0, newlineIdx).trim()),
           content: part.substring(newlineIdx + 1).trim(),
         });
       }
@@ -81,7 +84,7 @@ export default function ProposalViewPage() {
 
   const reassembleDraft = useCallback((sectionArray) => {
     return sectionArray
-      .map((s) => `## ${s.title}\n${s.content || ""}`)
+      .map((s, i) => `## ${i + 1}. ${stripNumberPrefix(s.title)}\n${s.content || ""}`)
       .join("\n\n");
   }, []);
 
@@ -332,9 +335,9 @@ export default function ProposalViewPage() {
     metaInfo.textContent = metaText;
     content.appendChild(metaInfo);
 
-    proposalSections.forEach((section) => {
+    proposalSections.forEach((section, idx) => {
       const sectionTitle = document.createElement("h2");
-      sectionTitle.textContent = section.title;
+      sectionTitle.textContent = `${idx + 1}. ${section.title}`;
       sectionTitle.style.color = "#0F2027";
       sectionTitle.style.fontSize = "14pt";
       sectionTitle.style.fontWeight = "bold";
@@ -457,8 +460,8 @@ export default function ProposalViewPage() {
     }
 
     // Proposal sections
-    proposalSections.forEach((s) => {
-      html += `<h2>${s.title}</h2>`;
+    proposalSections.forEach((s, idx) => {
+      html += `<h2>${idx + 1}. ${s.title}</h2>`;
 
       let sectionBody = convertMarkdownTables(s.content || "", { forWord: true });
       const tableBlocks = [];
@@ -785,7 +788,7 @@ export default function ProposalViewPage() {
               >
                 <span className={`text-[10px] cursor-grab select-none ${activeSection === i ? "text-white/50" : "text-gray-300"}`}>☰</span>
                 <span className="truncate">
-                  {s.title}
+                  {i + 1}. {s.title}
                 </span>
               </button>
             ))}
@@ -795,7 +798,7 @@ export default function ProposalViewPage() {
           <div className="rounded-xl border border-gray-200 bg-white p-8 min-h-[400px]">
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-xl font-bold text-black">
-                {currentSection?.title}
+                {activeSection + 1}. {currentSection?.title}
               </h2>
               <button
                 onClick={() => {
@@ -956,7 +959,7 @@ export default function ProposalViewPage() {
               {sections.map((section, i) => (
                 <div key={i} className="pb-4 border-b border-gray-100">
                   <h4 className="text-sm font-bold text-black mb-2">
-                    {section.title}
+                    {i + 1}. {section.title}
                   </h4>
                   <div
                     className="text-sm text-gray-700 line-clamp-4"
