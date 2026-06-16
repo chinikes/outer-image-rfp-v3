@@ -135,7 +135,7 @@ const firmHistoryBP = findBP('firm history') || findBP('history');
 const disputesBP = findBP('dispute');
 // Company Profile drives the Company Overview narrative (Section Name "Corporate Information").
 const companyProfileBP = findBP('corporate information') || findBP('company profile') || findBP('company overview') || firmOverviewBP;
-const insuranceBP = findBP('insurance') || findBP('licensing');
+const insuranceBP = findBP('licensing, certifications') || findBP('insurance & licensing') || findBP('insurance') || findBP('licensing');
 
 // ---- v3: Build supplementary context section ----
 let supplementarySection = '';
@@ -205,7 +205,7 @@ ${ratesSection || 'No rate schedules available.'}
 --- BOILERPLATE: COMPANY PROFILE (use VERBATIM for the Company Overview) ---
 ${truncate(companyProfileBP, 1600) || 'Not available.'}
 
---- BOILERPLATE: INSURANCE & LICENSING ---
+--- BOILERPLATE: LICENSING, CERTIFICATIONS & INSURANCE (use VERBATIM for that section) ---
 ${truncate(insuranceBP, 600) || 'Not available.'}
 
 --- BOILERPLATE: FIRM OVERVIEW ---
@@ -232,7 +232,7 @@ Write a tailored 3-4 paragraph narrative specific to THIS RFP (not boilerplate):
 - Optional Paragraph 4: a brief closing statement of commitment to the project.
 
 ## Company Information
-Format this section as labelled groups that match the reference EXACTLY: each label is BOLD on its OWN line, with its content on the line(s) directly below it. Do NOT use "-" bullets anywhere in this section. Output these groups in this exact order, with a blank line between groups:
+Format this section as labelled groups that match the reference EXACTLY: each label is BOLD on its OWN line, with its content on the line(s) directly below it. Do NOT use "-" bullets anywhere in this section. SPACING: put exactly ONE blank line between each group so they are visually separated; keep the lines WITHIN a group on consecutive lines (no blank line between a label and its content, or between list items). Output these groups in this exact order:
 
 **Company Name:** Outer Image LLC
 
@@ -253,7 +253,7 @@ Reproduce the COMPANY PROFILE boilerplate text VERBATIM, preserving its paragrap
 List EVERY person in TEAM BIOS, one per line, as "Name: Title" using each person's exact Title — no bullets, no omissions, no invented people. Lead with Laura Vardanian, then the rest.
 
 **Licensing, Certifications, and Insurance:**
-Write "Certified WBE in NYC and NY State" on the first line, then any additional certifications or insurance found in the INSURANCE & LICENSING boilerplate or in TEAM BIOS, each on its own line. Do NOT invent certifications or coverage.
+Reproduce the LICENSING, CERTIFICATIONS & INSURANCE boilerplate VERBATIM, with each item on its own line. If that boilerplate is unavailable, write "Certified WBE in NYC and NY State" plus any certifications found in TEAM BIOS, each on its own line. Do NOT invent certifications or coverage.
 
 ## Experience and Qualifications
 Include EVERY project in the PORTFOLIO PROJECTS list below (up to 5), in the order given. That list has ALREADY been filtered to this RFP's Industry ("${industry || 'any'}") and Service Line ("${serviceLine}") — do NOT add, drop, substitute, or reorder projects. For EACH project, output a bold project-name heading followed by a bullet list, using this EXACT format:
