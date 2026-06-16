@@ -302,7 +302,7 @@ One row per phase (Discovery & Strategy, Concept Design, Design Development, Doc
 - Description column: a short phrase (5-12 words) summarizing that phase's key deliverables, drawn from the Project Phases section above (e.g. "Stakeholder alignment, site review, and EGD strategy"). Do NOT put pricing or "hourly" text here.
 - Fee column: write "Hourly — billed per rate schedule" (or "To be confirmed upon scope finalization"). Do NOT invent dollar totals unless the RFP scope provides enough detail for an hourly estimate.
 
-Then, an Hourly Rate Schedule table built from RATE SCHEDULES:
+Then leave a blank line, output the bold heading **Hourly Rate Schedule** on its own line, leave another blank line, and then output a table built from RATE SCHEDULES with these columns:
 | Position | Hourly Rate |
 |----------|-------------|
 List each role with its rate in the Rate column formatted as "$[rate]/hr" so the per-hour basis is explicit (e.g., "$250/hr"). Keep the header exactly "Hourly Rate" — do NOT append "/hr" to the header. Use the rate values exactly as given; do NOT invent or alter rates. If no rate data is available, write: "Outer Image will provide a detailed fee proposal upon further discussion of the project scope."

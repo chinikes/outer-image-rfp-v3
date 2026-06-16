@@ -248,14 +248,15 @@ export default function ProposalViewPage() {
   // Shared helper: convert markdown tables to styled HTML tables for export.
   const convertMarkdownTables = (text, opts = {}) => {
     const { forWord = false } = opts;
+    const wordFont = "font-family:'Inter ExtraLight','Inter',Arial,sans-serif;";
     const tableStyle = forWord
-      ? 'width:100%;border-collapse:collapse;margin:8pt 0;font-size:10.5pt;border:1px solid #999;'
+      ? `width:100%;border-collapse:collapse;margin:8pt 0;font-size:10.5pt;border:1px solid #999;${wordFont}`
       : 'width:100%;border-collapse:collapse;margin:10px 0;font-size:10.5pt;border:1px solid #999;';
     const thStyle = forWord
-      ? 'padding:6pt 8pt;text-align:left;border:1px solid #999;background:#D5E8F0;font-weight:bold;color:#000;'
+      ? `padding:6pt 8pt;text-align:left;border:1px solid #999;background:#D5E8F0;font-weight:bold;color:#000;${wordFont}`
       : 'padding:6px 10px;text-align:left;border:1px solid #999;background:#D5E8F0;font-weight:bold;color:#000;';
     const tdStyle = forWord
-      ? 'padding:6pt 8pt;border:1px solid #999;vertical-align:top;'
+      ? `padding:6pt 8pt;border:1px solid #999;vertical-align:top;${wordFont}`
       : 'padding:6px 10px;border:1px solid #999;vertical-align:top;';
 
     return text.replace(
@@ -545,11 +546,11 @@ export default function ProposalViewPage() {
 
     html += `</div></body></html>`;
 
-    const blob = new Blob([html], { type: "application/msword" });
+    const blob = new Blob([html], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(proposal.rfpName || "proposal").replace(/[^a-zA-Z0-9]/g, "-")}-draft.doc`;
+    a.download = `${(proposal.rfpName || "proposal").replace(/[^a-zA-Z0-9]/g, "-")}-draft.docx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
