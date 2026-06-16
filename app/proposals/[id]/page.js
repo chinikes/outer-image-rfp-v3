@@ -948,9 +948,14 @@ export default function ProposalViewPage() {
                     html = html
                       .replace(/\n\n+/g, "<br><br>")
                       .replace(/\n/g, "<br>")
-                      .replace(/<\/strong>(<br>)+/g, "</strong> ")
+                      // Collapse a bold label onto its value (e.g. "Company Overview:"),
+                      // but NOT when the next line is a bullet — that would merge a
+                      // project heading like "Peloton — Signage Program" with "- Scope:".
+                      .replace(/<\/strong>(?:<br>)+(?!\s*-\s)/g, "</strong> ")
                       .replace(/<\/h4>(<br>)+/g, "</h4>")
-                      .replace(/<\/h3>(<br>)+/g, "</h3>");
+                      .replace(/<\/h3>(<br>)+/g, "</h3>")
+                      // Render leading "- " markers as bullets to match the reference format.
+                      .replace(/(^|<br>)\s*-\s+/g, "$1• ");
 
                     tableBlocks.forEach((block, i) => {
                       html = html.replace(`__TABLE_BLOCK_${i}__`, block);
