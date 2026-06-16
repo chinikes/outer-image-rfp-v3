@@ -292,9 +292,9 @@ export default function ProposalViewPage() {
 
     const content = document.createElement("div");
     content.style.padding = "40px";
-    content.style.fontFamily = "'Inter', sans-serif";
+    content.style.fontFamily = "'Inter ExtraLight', 'Inter', sans-serif";
     content.style.fontWeight = "200";
-    content.style.fontSize = "11pt";
+    content.style.fontSize = "10.5pt";
     content.style.lineHeight = "1.5";
     content.style.color = "#333";
 
@@ -452,7 +452,7 @@ export default function ProposalViewPage() {
       <head><meta charset="utf-8"><title>${proposal.rfpName}</title>
       <style>
         @page { margin: 1in 1in 1.2in 1in; mso-footer-margin: 0.5in; }
-        body { font-family: Inter, Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; font-weight: 200; }
+        body { font-family: 'Inter ExtraLight', 'Inter', Arial, sans-serif; font-size: 10.5pt; line-height: 1.4; color: #333; font-weight: 200; }
         .letterhead { margin-bottom: 8pt; }
         .logo-img { width: 50pt; height: 40pt; object-fit: contain; }
         .address-block { font-size: 10pt; color: #333; line-height: 1.6; font-weight: 200; }
@@ -460,13 +460,13 @@ export default function ProposalViewPage() {
         .divider { border: none; border-top: 1.5px solid #A0A0A0; margin: 14pt 0 16pt 0; }
         .proposal-heading { font-weight: bold; font-size: 11pt; color: #000; margin: 0 0 16pt 0; }
         .project-details { margin: 0 0 6pt 24pt; font-weight: 200; }
-        .project-details .label { font-size: 11pt; color: #333; margin: 0 0 4pt 0; }
-        .project-details .field { font-size: 11pt; color: #333; margin: 0 0 2pt 24pt; }
-        .project-date { font-size: 11pt; color: #333; margin: 0 0 20pt 48pt; font-weight: 200; }
+        .project-details .label { font-size: 10.5pt; color: #333; margin: 0 0 4pt 0; }
+        .project-details .field { font-size: 10.5pt; color: #333; margin: 0 0 2pt 24pt; }
+        .project-date { font-size: 10.5pt; color: #333; margin: 0 0 20pt 48pt; font-weight: 200; }
         h2 { font-family: Inter, Arial, sans-serif; font-size: 12pt; color: #000; font-weight: bold; margin: 24pt 0 8pt 0; border-bottom: none; padding-bottom: 0; }
         h3 { font-family: Inter, Arial, sans-serif; font-size: 11pt; color: #333; font-weight: bold; margin: 14pt 0 4pt 0; }
         h4 { font-family: Inter, Arial, sans-serif; font-size: 11pt; color: #333; font-weight: bold; margin: 10pt 0 4pt 0; }
-        p { margin: 0 0 6pt 0; font-size: 11pt; font-weight: 200; }
+        p { margin: 0 0 6pt 0; font-size: 10.5pt; font-weight: 200; }
         .section-content { margin-left: 0; }
         .page-break { page-break-after: always; }
         .word-footer { font-size: 9pt; color: #787878; }
@@ -479,13 +479,6 @@ export default function ProposalViewPage() {
         </o:OfficeDocumentSettings>
       </xml><![endif]-->
       </head><body>
-      <div style="mso-element:footer" id="f1">
-        <p class="word-footer" style="font-size:9pt;color:#787878;border-top:1px solid #ccc;padding-top:4pt;">
-          <span class="word-footer-left">Proposal for ${clientName}${projectName ? ' ' + projectName : ''}</span>
-          <span style="mso-tab-count:3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-          <span class="word-footer-right">${today}</span>
-        </p>
-      </div>
       <div style="mso-element:body">`;
 
     // Proposal letterhead — logo stacked above address (matches Laura's reference)
