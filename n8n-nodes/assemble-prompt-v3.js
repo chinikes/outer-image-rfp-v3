@@ -259,13 +259,13 @@ Reproduce the LICENSING, CERTIFICATIONS & INSURANCE boilerplate VERBATIM, with e
 Include EVERY project in the PORTFOLIO PROJECTS list below (up to 5), in the order given. That list has ALREADY been filtered to this RFP's Industry ("${industry || 'any'}") and Service Line ("${serviceLine}") — do NOT add, drop, substitute, or reorder projects. For EACH project, output a bold project-name heading followed by a bullet list, using this EXACT format:
 
 **[Project Name]**
-- **Scope:** [Scope of Services]
+- **Scope:** [a single descriptive line of the project scope — use the project's Scope of Services and, where helpful, key descriptors from the project summary, combined into ONE line]
 - **Location:** [Location]
 - **Budget:** $[Design Value] (Design) / $[Fabrication Value] (Fabrication)
 - **Timeline:** [Status or timeline info]
 - **Reference:** [use the project's pre-verified Reference contact EXACTLY as given in the PORTFOLIO PROJECTS data — including "Available upon request" if that is what is provided]
 
-[1-2 sentence description of the project]
+Do NOT add a separate description paragraph after the bullets — the descriptive detail belongs in the Scope line. Each project is ONLY the bold heading followed by the five bullets above, then a blank line before the next project.
 
 RULES FOR THIS SECTION:
 - ONLY use projects listed in PORTFOLIO PROJECTS. Never invent or duplicate a project.

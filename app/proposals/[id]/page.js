@@ -303,10 +303,17 @@ export default function ProposalViewPage() {
     // Proposal letterhead — logo stacked above address (matches Laura's reference)
     const logoImg = document.createElement("img");
     logoImg.src = LOGO_BASE64;
-    logoImg.style.width = "50px";
-    logoImg.style.height = "40px";
+    // Set HTML width/height attributes (not just CSS) so html2canvas captures the
+    // logo at the intended size rather than its ~709px native size. Square to avoid distortion.
+    logoImg.width = 60;
+    logoImg.height = 60;
+    logoImg.style.width = "60px";
+    logoImg.style.height = "60px";
+    logoImg.style.maxWidth = "60px";
     logoImg.style.objectFit = "contain";
+    logoImg.style.display = "block";
     logoImg.style.marginBottom = "6px";
+    try { await logoImg.decode(); } catch (e) {}
     content.appendChild(logoImg);
 
     const addressBlock = document.createElement("div");
@@ -483,7 +490,7 @@ export default function ProposalViewPage() {
 
     // Proposal letterhead — logo stacked above address (matches Laura's reference)
     html += `<div class="letterhead">`;
-    html += `<img src="${LOGO_BASE64}" class="logo-img" alt="Outer Image" style="width:50pt;height:40pt;"><br>`;
+    html += `<img src="${LOGO_BASE64}" alt="Outer Image" width="64" height="64" style="width:48pt;height:48pt;"><br>`;
     html += `<div class="address-block">`;
     html += `Design Studio: 161 Water Street, Suite 1533, New York, NY 10038<br>`;
     html += `Fabrication Shop: 226 42nd Street, Brooklyn, NY 11232<br>`;
