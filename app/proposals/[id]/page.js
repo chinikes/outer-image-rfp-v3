@@ -285,7 +285,7 @@ export default function ProposalViewPage() {
 
     const currentSections = parseSections(proposal.generatedDraft);
     const extracted = proposal.extractedData || {};
-    const clientName = extracted.clientName || extracted.client || extracted.agency || extracted.organization || "";
+    const clientName = extracted.clientName || extracted.client || extracted.agency || extracted.organization || extracted.issuer || "";
     const projectName = extracted.projectName || extracted.projectTitle || extracted.project || proposal.rfpName || "";
     const location = extracted.location || extracted.projectLocation || "";
     const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -304,15 +304,14 @@ export default function ProposalViewPage() {
     const logoImg = document.createElement("img");
     logoImg.src = LOGO_BASE64;
     // Set HTML width/height attributes (not just CSS) so html2canvas captures the
-    // logo at the intended size rather than its ~709px native size. Square to avoid distortion.
-    logoImg.width = 60;
-    logoImg.height = 60;
-    logoImg.style.width = "60px";
-    logoImg.style.height = "60px";
-    logoImg.style.maxWidth = "60px";
+    // logo at the intended size. Logo PNG is cropped (~337x221, ratio 1.525); keep that ratio.
+    logoImg.width = 124;
+    logoImg.height = 81;
+    logoImg.style.width = "124px";
+    logoImg.style.height = "81px";
     logoImg.style.objectFit = "contain";
     logoImg.style.display = "block";
-    logoImg.style.marginBottom = "6px";
+    logoImg.style.margin = "0 0 6px 0";
     try { await logoImg.decode(); } catch (e) {}
     content.appendChild(logoImg);
 
@@ -340,23 +339,24 @@ export default function ProposalViewPage() {
     proposalLabel.style.marginBottom = "16px";
     content.appendChild(proposalLabel);
 
-    // Project details — indented (matches Laura's reference)
+    // Project details — stepped indent (matches Laura's reference)
     const detailsBlock = document.createElement("div");
     detailsBlock.style.marginBottom = "6px";
     detailsBlock.style.paddingLeft = "24px";
     detailsBlock.style.fontWeight = "200";
-    let detailsHtml = `<div style="font-size:11pt;color:#333;margin-bottom:4px;">Project Details</div>`;
-    if (clientName) detailsHtml += `<div style="font-size:11pt;color:#333;padding-left:24px;">Client: ${clientName}</div>`;
-    detailsHtml += `<div style="font-size:11pt;color:#333;padding-left:24px;">Project: ${projectName}</div>`;
-    if (location) detailsHtml += `<div style="font-size:11pt;color:#333;padding-left:24px;">Location: ${location}</div>`;
+    let detailsHtml = `<div style="font-size:10.5pt;color:#333;margin-bottom:4px;">Project Details</div>`;
+    if (clientName) detailsHtml += `<div style="font-size:10.5pt;color:#333;padding-left:24px;">Client: ${clientName}</div>`;
+    detailsHtml += `<div style="font-size:10.5pt;color:#333;padding-left:24px;">Project: ${projectName}</div>`;
+    if (location) detailsHtml += `<div style="font-size:10.5pt;color:#333;padding-left:24px;">Location: ${location}</div>`;
     detailsBlock.innerHTML = detailsHtml;
     content.appendChild(detailsBlock);
 
     const dateBlock = document.createElement("div");
-    dateBlock.style.fontSize = "11pt";
+    dateBlock.style.fontSize = "10.5pt";
     dateBlock.style.color = "#333";
     dateBlock.style.fontWeight = "200";
     dateBlock.style.paddingLeft = "48px";
+    dateBlock.style.marginTop = "10px";
     dateBlock.style.marginBottom = "20px";
     dateBlock.textContent = `Date: ${today}`;
     content.appendChild(dateBlock);
@@ -441,7 +441,7 @@ export default function ProposalViewPage() {
     const currentSections = parseSections(proposal.generatedDraft);
     const extracted = proposal.extractedData || {};
 
-    const clientName = extracted.clientName || extracted.client || extracted.agency || extracted.organization || "";
+    const clientName = extracted.clientName || extracted.client || extracted.agency || extracted.organization || extracted.issuer || "";
     const projectName = extracted.projectName || extracted.projectTitle || extracted.project || proposal.rfpName || "";
     const location = extracted.location || extracted.projectLocation || "";
     const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -459,10 +459,10 @@ export default function ProposalViewPage() {
         .address-block a { color: #1155cc; text-decoration: underline; }
         .divider { border: none; border-top: 1.5px solid #A0A0A0; margin: 14pt 0 16pt 0; }
         .proposal-heading { font-weight: bold; font-size: 11pt; color: #000; margin: 0 0 16pt 0; }
-        .project-details { margin: 0 0 6pt 24pt; font-weight: 200; }
+        .project-details { margin: 0 0 6pt 18pt; font-weight: 200; }
         .project-details .label { font-size: 10.5pt; color: #333; margin: 0 0 4pt 0; }
-        .project-details .field { font-size: 10.5pt; color: #333; margin: 0 0 2pt 24pt; }
-        .project-date { font-size: 10.5pt; color: #333; margin: 0 0 20pt 48pt; font-weight: 200; }
+        .project-details .field { font-size: 10.5pt; color: #333; margin: 0 0 2pt 18pt; }
+        .project-date { font-size: 10.5pt; color: #333; margin: 10pt 0 20pt 36pt; font-weight: 200; }
         h2 { font-family: Inter, Arial, sans-serif; font-size: 12pt; color: #000; font-weight: bold; margin: 24pt 0 8pt 0; border-bottom: none; padding-bottom: 0; }
         h3 { font-family: Inter, Arial, sans-serif; font-size: 11pt; color: #333; font-weight: bold; margin: 14pt 0 4pt 0; }
         h4 { font-family: Inter, Arial, sans-serif; font-size: 11pt; color: #333; font-weight: bold; margin: 10pt 0 4pt 0; }
@@ -483,7 +483,7 @@ export default function ProposalViewPage() {
 
     // Proposal letterhead — logo stacked above address (matches Laura's reference)
     html += `<div class="letterhead">`;
-    html += `<img src="${LOGO_BASE64}" alt="Outer Image" width="64" height="64" style="width:48pt;height:48pt;"><br>`;
+    html += `<img src="${LOGO_BASE64}" alt="Outer Image" width="124" height="81" style="width:93pt;height:61pt;display:block;margin:0;"><br>`;
     html += `<div class="address-block">`;
     html += `Design Studio: 161 Water Street, Suite 1533, New York, NY 10038<br>`;
     html += `Fabrication Shop: 226 42nd Street, Brooklyn, NY 11232<br>`;
