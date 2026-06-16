@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { LOGO_BASE64 } from "../../lib/logo-data";
 
 // Pure helpers — defined outside component to avoid recreating on every render
 const stripNumberPrefix = (title) => title.replace(/^\d+(?:\.\d+)?\s*\.?\s*/, "");
@@ -291,31 +292,35 @@ export default function ProposalViewPage() {
 
     const content = document.createElement("div");
     content.style.padding = "40px";
-    content.style.fontFamily = "'Arial', sans-serif";
+    content.style.fontFamily = "'Inter', sans-serif";
     content.style.fontSize = "11pt";
     content.style.lineHeight = "1.5";
     content.style.color = "#333";
 
     const proposalSections = currentSections;
 
-    // Proposal letterhead — text-based logo
-    const logoText = document.createElement("div");
-    logoText.style.fontFamily = "Arial Black, Impact, Helvetica, sans-serif";
-    logoText.style.fontWeight = "900";
-    logoText.style.fontSize = "22pt";
-    logoText.style.letterSpacing = "4px";
-    logoText.style.color = "#000";
-    logoText.style.lineHeight = "1.2";
-    logoText.style.marginBottom = "8px";
-    logoText.innerHTML = "OUTER<br>IMAGE";
-    content.appendChild(logoText);
+    // Proposal letterhead — logo image + dual addresses
+    const headerRow = document.createElement("div");
+    headerRow.style.display = "flex";
+    headerRow.style.alignItems = "flex-start";
+    headerRow.style.gap = "20px";
+    headerRow.style.marginBottom = "8px";
+
+    const logoImg = document.createElement("img");
+    logoImg.src = LOGO_BASE64;
+    logoImg.style.width = "80px";
+    logoImg.style.height = "80px";
+    logoImg.style.objectFit = "contain";
+    headerRow.appendChild(logoImg);
 
     const addressBlock = document.createElement("div");
-    addressBlock.style.fontSize = "10.5pt";
+    addressBlock.style.fontSize = "9pt";
     addressBlock.style.color = "#555";
     addressBlock.style.lineHeight = "1.5";
-    addressBlock.innerHTML = `226 42nd Street<br>Brooklyn, NY 11232<br>212.661.2124<br><span style="color:#2C7A7B">www.outerimage.com</span>`;
-    content.appendChild(addressBlock);
+    addressBlock.style.fontFamily = "'Inter', sans-serif";
+    addressBlock.innerHTML = `<strong>Design Studio:</strong> 161 Water Street, Suite 1533, New York, NY 10038<br><strong>Fabrication Shop:</strong> 226 42nd Street, Brooklyn, NY 11232<br>212.661.2124 &nbsp;|&nbsp; <span style="color:#2C7A7B">www.outerimage.com</span>`;
+    headerRow.appendChild(addressBlock);
+    content.appendChild(headerRow);
 
     const divider = document.createElement("hr");
     divider.style.border = "none";
@@ -323,21 +328,10 @@ export default function ProposalViewPage() {
     divider.style.margin = "16px 0 20px 0";
     content.appendChild(divider);
 
-    // Proposal block
-    const proposalLabel = document.createElement("div");
-    proposalLabel.textContent = "Proposal";
-    proposalLabel.style.fontSize = "14pt";
-    proposalLabel.style.fontWeight = "bold";
-    proposalLabel.style.border = "2px solid #003366";
-    proposalLabel.style.padding = "12px 16px";
-    proposalLabel.style.display = "inline-block";
-    proposalLabel.style.marginBottom = "16px";
-    content.appendChild(proposalLabel);
-
+    // Project details — no bordered box
     const detailsBlock = document.createElement("div");
-    detailsBlock.style.marginLeft = "16px";
     detailsBlock.style.marginBottom = "16px";
-    let detailsHtml = `<div style="font-weight:bold;font-size:10.5pt;color:#555;margin-bottom:10px;">Project Details</div>`;
+    let detailsHtml = "";
     if (clientName) detailsHtml += `<div style="font-size:10.5pt;color:#333;">Client: ${clientName}</div>`;
     detailsHtml += `<div style="font-size:10.5pt;color:#333;">Project: ${projectName}</div>`;
     if (location) detailsHtml += `<div style="font-size:10.5pt;color:#333;">Location: ${location}</div>`;
@@ -438,39 +432,38 @@ export default function ProposalViewPage() {
       <head><meta charset="utf-8"><title>${proposal.rfpName}</title>
       <style>
         @page { margin: 1in 1in 1in 1in; }
-        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; }
+        body { font-family: Inter, Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; }
         .letterhead { margin-bottom: 8pt; }
-        .logo-text { font-family: Arial Black, Impact, Helvetica, sans-serif; font-weight: 900; font-size: 22pt; letter-spacing: 4px; color: #000; line-height: 1.2; margin: 0 0 8pt 0; }
-        .address { font-size: 10.5pt; color: #555; line-height: 1.5; margin: 0 0 2pt 0; }
-        .address a { color: #2C7A7B; text-decoration: none; }
+        .header-row { display: flex; align-items: flex-start; gap: 16pt; margin-bottom: 8pt; }
+        .logo-img { width: 80pt; height: 80pt; object-fit: contain; }
+        .address-block { font-size: 9pt; color: #555; line-height: 1.5; }
+        .address-block a { color: #2C7A7B; text-decoration: none; }
         .divider { border: none; border-top: 1.5px solid #999; margin: 16pt 0 20pt 0; }
-        .proposal-label { font-family: Arial, sans-serif; font-size: 14pt; font-weight: bold; color: #000; margin: 0 0 16pt 0; border: 2px solid #003366; padding: 12pt 16pt; display: inline-block; }
-        .project-details { margin: 16pt 0 6pt 16pt; }
-        .project-details .label { font-size: 10.5pt; color: #555; margin: 0 0 10pt 0; }
+        .project-details { margin: 0 0 6pt 0; }
         .project-details .field { font-size: 10.5pt; color: #333; margin: 0 0 2pt 0; }
-        .project-date { font-size: 10.5pt; color: #333; margin: 12pt 0 24pt 16pt; }
-        h2 { font-size: 13pt; color: #000; font-weight: bold; margin: 28pt 0 8pt 0; border-bottom: 1px solid #ccc; padding-bottom: 4pt; }
-        h3 { font-size: 12pt; color: #333; font-weight: bold; margin: 14pt 0 4pt 0; }
-        h4 { font-size: 11pt; color: #333; font-weight: bold; margin: 10pt 0 4pt 0; }
+        .project-date { font-size: 10.5pt; color: #333; margin: 12pt 0 24pt 0; }
+        h2 { font-family: Inter, Arial, sans-serif; font-size: 13pt; color: #000; font-weight: bold; margin: 28pt 0 8pt 0; border-bottom: 1px solid #ccc; padding-bottom: 4pt; }
+        h3 { font-family: Inter, Arial, sans-serif; font-size: 12pt; color: #333; font-weight: bold; margin: 14pt 0 4pt 0; }
+        h4 { font-family: Inter, Arial, sans-serif; font-size: 11pt; color: #333; font-weight: bold; margin: 10pt 0 4pt 0; }
         p { margin: 0 0 6pt 0; font-size: 11pt; }
         .section-content { margin-left: 0; }
         .page-break { page-break-after: always; }
       </style></head><body>`;
 
-    // Proposal letterhead
+    // Proposal letterhead — logo image + dual addresses
     html += `<div class="letterhead">`;
-    html += `<div class="logo-text">OUTER<br>IMAGE</div>`;
-    html += `<p class="address">226 42nd Street</p>`;
-    html += `<p class="address">Brooklyn, NY 11232</p>`;
-    html += `<p class="address">212.661.2124</p>`;
-    html += `<p class="address"><a href="http://www.outerimage.com">www.outerimage.com</a></p>`;
+    html += `<table border="0" cellpadding="0" cellspacing="0"><tr>`;
+    html += `<td style="vertical-align:top;padding-right:16pt;"><img src="${LOGO_BASE64}" class="logo-img" alt="Outer Image" style="width:80pt;height:80pt;"></td>`;
+    html += `<td class="address-block" style="vertical-align:top;font-size:9pt;color:#555;line-height:1.5;">`;
+    html += `<b>Design Studio:</b> 161 Water Street, Suite 1533, New York, NY 10038<br>`;
+    html += `<b>Fabrication Shop:</b> 226 42nd Street, Brooklyn, NY 11232<br>`;
+    html += `212.661.2124 &nbsp;|&nbsp; <a href="http://www.outerimage.com">www.outerimage.com</a>`;
+    html += `</td></tr></table>`;
     html += `</div>`;
     html += `<hr class="divider">`;
 
-    // Proposal header block
-    html += `<div class="proposal-label">Proposal</div>`;
+    // Project details — no bordered box
     html += `<div class="project-details">`;
-    html += `<p class="label" style="font-weight:bold;">Project Details</p>`;
     if (clientName) html += `<p class="field">Client: ${clientName}</p>`;
     html += `<p class="field">Project: ${projectName}</p>`;
     if (location) html += `<p class="field">Location: ${location}</p>`;

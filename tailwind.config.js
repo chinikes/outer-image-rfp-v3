@@ -27,7 +27,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['"DM Sans"', "system-ui", "sans-serif"],
+        sans: ['"Inter"', "system-ui", "sans-serif"],
       },
     },
   },
