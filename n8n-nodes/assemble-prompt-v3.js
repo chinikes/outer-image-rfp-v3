@@ -42,7 +42,7 @@ const serviceLine = merged.serviceLine || 'Design + Fabrication';
 const industry = merged.industry || '';
 
 // ---- Primary firm contact (stable firm info — used in Company Information) ----
-const PRIMARY_CONTACT = 'Laura Vardanian, Founder & Project Manager — laura@outerimagenyc.com, (212) 470-8056';
+const PRIMARY_CONTACT = 'Laura Vardanian, Project Management Lead — laura@outerimagenyc.com, (212) 470-8056';
 
 // ---- Build team bios section (capped at 8, truncated) ----
 const teamSection = capList(merged.teamBios, 8).map(t =>
@@ -133,6 +133,9 @@ const firmOverviewBP = findBP('firm overview') || findBP('overview');
 const missionBP = findBP('mission');
 const firmHistoryBP = findBP('firm history') || findBP('history');
 const disputesBP = findBP('dispute');
+// Company Profile drives the Company Overview narrative (Section Name "Corporate Information").
+const companyProfileBP = findBP('corporate information') || findBP('company profile') || findBP('company overview') || firmOverviewBP;
+const insuranceBP = findBP('insurance') || findBP('licensing');
 
 // ---- v3: Build supplementary context section ----
 let supplementarySection = '';
@@ -199,6 +202,12 @@ ${scheduleSection || 'No schedule templates available.'}
 --- RATE SCHEDULES ---
 ${ratesSection || 'No rate schedules available.'}
 
+--- BOILERPLATE: COMPANY PROFILE (use VERBATIM for the Company Overview) ---
+${truncate(companyProfileBP, 1600) || 'Not available.'}
+
+--- BOILERPLATE: INSURANCE & LICENSING ---
+${truncate(insuranceBP, 600) || 'Not available.'}
+
 --- BOILERPLATE: FIRM OVERVIEW ---
 ${truncate(firmOverviewBP, 1000) || 'Not available.'}
 
@@ -223,14 +232,28 @@ Write a tailored 3-4 paragraph narrative specific to THIS RFP (not boilerplate):
 - Optional Paragraph 4: a brief closing statement of commitment to the project.
 
 ## Company Information
-Present as a FLAT block (no numbered sub-sections). Output these items in order, each as its own line/group:
-- **Company Name:** Outer Image LLC
-- **Design Studio:** 161 Water Street, Suite 1533, New York, NY 10038
-- **Fabrication Shop:** 226 42nd Street, Brooklyn, NY 11232
-- **Primary Contact:** ${PRIMARY_CONTACT}
-- **Company Overview:** one narrative paragraph adapted from the Firm Overview / Firm History / Mission boilerplate (do not copy verbatim).
-- **Key Personnel:** List EVERY person in TEAM BIOS — do not omit anyone and do not invent anyone. Output the bold label "Key Personnel:" on its own line, then each person on their OWN line below as a "- Name: Title" bullet, using each person's exact Title from TEAM BIOS. Lead with Laura Vardanian, then list the rest.
-- **Licensing & Certifications:** state that Outer Image LLC is WBE-certified, plus any certifications that appear in TEAM BIOS. Do NOT invent certifications.
+Format this section as labelled groups that match the reference EXACTLY: each label is BOLD on its OWN line, with its content on the line(s) directly below it. Do NOT use "-" bullets anywhere in this section. Output these groups in this exact order, with a blank line between groups:
+
+**Company Name:** Outer Image LLC
+
+**Address:**
+Design Studio: 161 Water Street, Suite 1533, New York, NY 10038
+Fabrication Shop: 226 42nd Street, Brooklyn, NY 11232
+
+**Contact:**
+Laura Vardanian, Project Management Lead
+laura@outerimagenyc.com
+(212) 470-8056
+www.outerimagenyc.com
+
+**Company Overview:**
+Reproduce the COMPANY PROFILE boilerplate text VERBATIM, preserving its paragraph breaks. Do NOT summarize it, shorten it, or substitute other boilerplate.
+
+**Key Personnel Assigned to Project:**
+List EVERY person in TEAM BIOS, one per line, as "Name: Title" using each person's exact Title — no bullets, no omissions, no invented people. Lead with Laura Vardanian, then the rest.
+
+**Licensing, Certifications, and Insurance:**
+Write "Certified WBE in NYC and NY State" on the first line, then any additional certifications or insurance found in the INSURANCE & LICENSING boilerplate or in TEAM BIOS, each on its own line. Do NOT invent certifications or coverage.
 
 ## Experience and Qualifications
 Include EVERY project in the PORTFOLIO PROJECTS list below (up to 5), in the order given. That list has ALREADY been filtered to this RFP's Industry ("${industry || 'any'}") and Service Line ("${serviceLine}") — do NOT add, drop, substitute, or reorder projects. For EACH project, output a bold project-name heading followed by a bullet list, using this EXACT format:
