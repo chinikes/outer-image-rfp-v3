@@ -305,14 +305,14 @@ export default function ProposalViewPage() {
     logoImg.src = LOGO_BASE64;
     // Set HTML width/height attributes (not just CSS) so html2canvas captures the
     // logo at the intended size. Logo PNG is cropped (~337x221, ratio 1.525); keep that ratio.
-    logoImg.width = 84;
-    logoImg.height = 55;
-    logoImg.style.width = "84px";
-    logoImg.style.height = "55px";
+    logoImg.width = 50;
+    logoImg.height = 40;
+    logoImg.style.width = "50px";
+    logoImg.style.height = "40px";
     logoImg.style.objectFit = "contain";
     logoImg.style.display = "block";
-    logoImg.style.borderBottom = "2px solid #1155cc";
-    logoImg.style.paddingBottom = "3px";
+    logoImg.style.borderBottom = "1.5px solid #1155cc";
+    logoImg.style.paddingBottom = "2px";
     try { await logoImg.decode(); } catch (e) {}
     // Logo links to the site (matches the reference); blue underline = the link.
     const logoLink = document.createElement("a");
@@ -491,7 +491,7 @@ export default function ProposalViewPage() {
 
     // Proposal letterhead — logo stacked above address (matches Laura's reference)
     html += `<div class="letterhead">`;
-    html += `<a href="https://www.outerimage.com" style="text-decoration:none;"><img src="${LOGO_BASE64}" alt="Outer Image" width="84" height="55" style="width:63pt;height:41pt;display:block;margin:0;border-bottom:1.5pt solid #1155cc;padding-bottom:2pt;"></a><br>`;
+    html += `<a href="https://www.outerimage.com" style="text-decoration:none;"><img src="${LOGO_BASE64}" alt="Outer Image" width="50" height="40" style="width:37.5pt;height:30pt;display:block;margin:0;border-bottom:1pt solid #1155cc;padding-bottom:2pt;"></a><br>`;
     html += `<div class="address-block">`;
     html += `Design Studio: 161 Water Street, Suite 1533, New York, NY 10038<br>`;
     html += `Fabrication Shop: 226 42nd Street, Brooklyn, NY 11232<br>`;
