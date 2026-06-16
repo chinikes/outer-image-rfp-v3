@@ -229,7 +229,7 @@ Present as a FLAT block (no numbered sub-sections). Output these items in order,
 - **Fabrication Shop:** 226 42nd Street, Brooklyn, NY 11232
 - **Primary Contact:** ${PRIMARY_CONTACT}
 - **Company Overview:** one narrative paragraph adapted from the Firm Overview / Firm History / Mission boilerplate (do not copy verbatim).
-- **Key Personnel:** a bullet list, one person per line in "Name: Title" format, drawn ONLY from TEAM BIOS. Lead with Laura Vardanian, then the most relevant members for ${serviceLine}${industry ? ` / ${industry}` : ''} work.
+- **Key Personnel:** List EVERY person in TEAM BIOS — do not omit anyone and do not invent anyone. Output the bold label "Key Personnel:" on its own line, then each person on their OWN line below as a "- Name: Title" bullet, using each person's exact Title from TEAM BIOS. Lead with Laura Vardanian, then list the rest.
 - **Licensing & Certifications:** state that Outer Image LLC is WBE-certified, plus any certifications that appear in TEAM BIOS. Do NOT invent certifications.
 
 ## Experience and Qualifications
