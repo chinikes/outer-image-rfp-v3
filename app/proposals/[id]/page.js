@@ -546,11 +546,11 @@ export default function ProposalViewPage() {
 
     html += `</div></body></html>`;
 
-    const blob = new Blob([html], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const blob = new Blob([html], { type: "application/msword" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(proposal.rfpName || "proposal").replace(/[^a-zA-Z0-9]/g, "-")}-draft.docx`;
+    a.download = `${(proposal.rfpName || "proposal").replace(/[^a-zA-Z0-9]/g, "-")}-draft.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
