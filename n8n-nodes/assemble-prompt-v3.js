@@ -179,6 +179,7 @@ Generate a complete proposal response for the following RFP using EXACTLY the fi
 === RFP DATA ===
 Issuer: ${rfp.issuer || 'Unknown'}
 Project Title: ${rfp.projectTitle || 'Unknown'}
+Project Location: ${rfp.location || 'Not specified'}
 Submission Deadline: ${rfp.submissionDeadline || 'TBD'}
 Service Line: ${serviceLine}${industry ? `\nIndustry/Client Tier: ${industry}` : ''}
 IMPORTANT CONTEXT: The user has categorized this RFP as Service Line="${serviceLine}"${industry ? ` and Industry="${industry}"` : ''}. These selections MUST heavily influence the entire proposal — tone, project references, team emphasis, and approach should all be tailored to this specific service type${industry ? ` and ${industry.toLowerCase()} sector` : ''}.
