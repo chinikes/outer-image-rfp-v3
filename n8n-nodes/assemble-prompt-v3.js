@@ -280,9 +280,9 @@ One row per phase (Discovery & Strategy, Concept Design, Design Development, Doc
 - Fee column: write "Hourly — billed per rate schedule" (or "To be confirmed upon scope finalization"). Do NOT invent dollar totals unless the RFP scope provides enough detail for an hourly estimate.
 
 Then, an Hourly Rate Schedule table built from RATE SCHEDULES:
-| Position | Rate |
-|----------|------|
-List each role and its hourly rate exactly as given. Do NOT invent rates. If no rate data is available, write: "Outer Image will provide a detailed fee proposal upon further discussion of the project scope."
+| Position | Hourly Rate |
+|----------|-------------|
+List each role with its rate in the Rate column formatted as "$[rate]/hr" so the per-hour basis is explicit (e.g., "$250/hr"). Keep the header exactly "Hourly Rate" — do NOT append "/hr" to the header. Use the rate values exactly as given; do NOT invent or alter rates. If no rate data is available, write: "Outer Image will provide a detailed fee proposal upon further discussion of the project scope."
 
 === ZERO-HALLUCINATION POLICY (APPLIES TO THE ENTIRE PROPOSAL) ===
 These rules override everything else and apply to EVERY section.
