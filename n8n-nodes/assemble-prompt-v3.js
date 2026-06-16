@@ -2,12 +2,18 @@
  * n8n Code Node: "Assemble Prompt v3"
  *
  * Builds the full GPT-4o prompt for proposal generation.
- * v3 additions:
- *   - Supplementary context section (from supporting documents)
+ * v3.2 (Laura template alignment):
+ *   - 5-section structure matching Laura's Intuit reference proposal:
+ *       1. Introduction and Executive Summary (tailored, folds in former "Value")
+ *       2. Company Information (flat — no numbered sub-sections)
+ *       3. Experience and Qualifications (bullet lists, references inline)
+ *       4. Project Phases (design-led: Discovery, Concept, Design Dev, Documentation)
+ *       5. Fee Proposal (Phase/Description/Fee table + Hourly Rate Schedule table)
+ *   - References are pre-joined to portfolio projects by client name (code-side),
+ *     so contact info appears inline in Experience bullets with no cross-pollination.
+ *   - No separate "Project Overview", "Proposed Schedule", or "References" sections.
  *
  * Token budget: ~25K input to stay under 30K TPM limit.
- * Allocation: system ~500, RFP ~2K, supplementary ~3K, Airtable ~8K,
- *             instructions ~4K = ~17.5K input, ~10K output.
  */
 
 const merged = $input.first().json;
@@ -19,7 +25,7 @@ function findBP(name) {
   return match ? match.content : '';
 }
 
-// ---- Truncation helpers (same as v2) ----
+// ---- Truncation helpers ----
 function truncate(str, maxChars) {
   if (!str) return '';
   str = String(str);
@@ -35,65 +41,84 @@ const rfp = merged.extractedData || {};
 const serviceLine = merged.serviceLine || 'Design + Fabrication';
 const industry = merged.industry || '';
 
+// ---- Primary firm contact (stable firm info — used in Company Information) ----
+const PRIMARY_CONTACT = 'Laura Vardanian, Founder & Project Manager — laura@outerimagenyc.com, (212) 470-8056';
+
 // ---- Build team bios section (capped at 8, truncated) ----
 const teamSection = capList(merged.teamBios, 8).map(t =>
   `- ${t.name}, ${t.title}${t.role ? ' (' + t.role + ')' : ''}${t.certifications ? ' [' + t.certifications + ']' : ''}\n  Bio: ${truncate(t.bio, 400)}`
 ).join('\n');
 
-// ---- Build references section (sorted by tier relevance, capped at 5) ----
-// Deduplicate by client+project name to prevent GPT from seeing duplicate data
-const seenRefs = new Set();
-const uniqueRefs = [...(merged.references || [])].filter(r => {
-  const key = `${(r.client || '').toLowerCase()}|${(r.project || '').toLowerCase()}`;
-  if (seenRefs.has(key)) return false;
-  seenRefs.add(key);
-  return true;
-});
-const sortedRefs = uniqueRefs.sort((a, b) => {
-  const aMatch = industry && a.tier && a.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
-  const bMatch = industry && b.tier && b.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
-  return bMatch - aMatch;
-});
-const refsSection = capList(sortedRefs, 5).map(r =>
-  `- ${r.client} — ${r.project}${r.year ? ' (' + r.year + ')' : ''}${r.tier ? ' [Client Tier: ' + r.tier + ']' : ''}\n  ${truncate(r.description, 300)}\n  Contact: ${r.contactName}${r.contactEmail ? ', ' + r.contactEmail : ''}${r.contactPhone ? ', ' + r.contactPhone : ''}`
-).join('\n');
+// ---- Build de-duplicated reference list (for inline Experience references) ----
+// References are fetched UNFILTERED from Airtable, so all clients are available
+// to join. We match a reference to a portfolio project by client name against
+// either the project's Client field OR the project name (which usually leads with
+// the client, e.g. "Meta — Signage Program"), since the Client field is often blank.
+const uniqueRefs = [];
+const seenRefClients = new Set();
+for (const r of (merged.references || [])) {
+  const key = (r.client || '').toLowerCase().trim();
+  if (key && !seenRefClients.has(key)) { seenRefClients.add(key); uniqueRefs.push(r); }
+}
+function findRefFor(p) {
+  const proj = (p.project || '').toLowerCase();
+  const client = (p.client || '').toLowerCase().trim();
+  for (const r of uniqueRefs) {
+    const rc = (r.client || '').toLowerCase().trim();
+    if (!rc) continue;
+    if (rc === client || proj.startsWith(rc) || proj.includes(rc + ' ')) return r;
+  }
+  return null;
+}
+function refLineFor(p) {
+  const r = findRefFor(p);
+  if (!r) return 'Available upon request';
+  let line = r.contactName || '';
+  if (r.contactEmail) line += (line ? ', ' : '') + r.contactEmail;
+  if (r.contactPhone) line += (line ? ', ' : '') + r.contactPhone;
+  return line || 'Available upon request';
+}
 
-// ---- Pre-formatted references block (inserted verbatim into output) ----
-const preformattedRefs = capList(sortedRefs, 5).map(r => {
-  let block = `**${r.client || '[Not provided]'} — ${r.project || '[Not provided]'}**`;
-  block += `  \n**Contact:** ${r.contactName || '[Not provided]'}${r.contactEmail ? ', ' + r.contactEmail : ', [Not provided]'}${r.contactPhone ? ', ' + r.contactPhone : ', [Not provided]'}`;
-  block += `  \n**Year:** ${r.year || '[Not provided]'}`;
-  block += `  \n${truncate(r.description, 300) || 'Signage design and fabrication services.'}`;
-  return block;
-}).join('\n\n');
-
-// ---- Build portfolio section (sorted by relevance, capped at 5) ----
-// Sort: matching tier+service line first, then tier only, then service line only, then rest
-const sortedPortfolio = [...(merged.portfolio || [])].sort((a, b) => {
-  const aMatchTier = industry && a.tier && a.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
-  const bMatchTier = industry && b.tier && b.tier.toLowerCase() === industry.toLowerCase() ? 1 : 0;
-  const slNorm = serviceLine.toLowerCase();
-  const aMatchSL = a.tags && String(a.tags).toLowerCase().includes(slNorm.split(' ')[0]) ? 1 : 0;
-  const bMatchSL = b.tags && String(b.tags).toLowerCase().includes(slNorm.split(' ')[0]) ? 1 : 0;
-  const aScore = aMatchTier * 2 + aMatchSL;
-  const bScore = bMatchTier * 2 + bMatchSL;
-  return bScore - aScore;
-});
-const portfolioSection = capList(sortedPortfolio, 5).map(p => {
+// ---- Select portfolio projects DETERMINISTICALLY by Industry (Client Tier) + Service Line ----
+// Strict tier+service-line matches lead; graceful fallback so Experience is never empty.
+function selectPortfolio(projects, max) {
+  const ind = (industry || '').toLowerCase().trim();
+  const sl = (serviceLine || '').toLowerCase().trim();
+  const tierMatch = p => ind && (p.tier || '').toLowerCase().trim() === ind;
+  const slMatch = p => sl && (p.serviceLine || '').toLowerCase().trim() === sl;
+  const seen = new Set();
+  const out = [];
+  const add = (arr) => {
+    for (const p of arr) {
+      const k = (p.project || '').toLowerCase().trim();
+      if (k && !seen.has(k)) { seen.add(k); out.push(p); }
+      if (out.length >= max) break;
+    }
+  };
+  add(projects.filter(p => tierMatch(p) && slMatch(p))); // 1. Industry AND Service Line
+  if (out.length < max) add(projects.filter(tierMatch)); // 2. Industry (any service line)
+  if (out.length < max) add(projects.filter(slMatch));   // 3. Service Line (any industry)
+  if (out.length < max) add(projects);                   // 4. fill to reach max
+  return out.slice(0, max);
+}
+const selectedPortfolio = selectPortfolio(merged.portfolio || [], 5);
+const portfolioSection = selectedPortfolio.map(p => {
   let entry = `- ${p.project}${p.client ? ' (Client: ' + p.client + ')' : ''}`;
   if (p.tier) entry += ` [Client Tier: ${p.tier}]`;
   if (p.location) entry += `\n  Location: ${p.location}`;
   if (p.gc) entry += ` | GC: ${p.gc}`;
   if (p.projectSize) entry += `\n  Project Size: ${p.projectSize}`;
   if (p.scopeOfServices) entry += `\n  Scope of Services: ${p.scopeOfServices}`;
-  if (p.designValue) entry += ` | Design Value: ${p.designValue}`;
+  if (p.designValue) entry += `\n  Design Value: ${p.designValue}`;
   if (p.fabricationValue) entry += ` | Fabrication Value: ${p.fabricationValue}`;
   if (p.status) entry += `\n  Status: ${p.status}`;
+  // Pre-joined verified reference contact for THIS project (by client name match):
+  entry += `\n  Reference (verified, use verbatim): ${refLineFor(p)}`;
   entry += `\n  ${truncate(p.summary, 300)}`;
   return entry;
 }).join('\n');
 
-// ---- Build schedule section ----
+// ---- Build schedule section (folded into Project Phases if present) ----
 const scheduleSection = capList(merged.schedules, 3).map(s =>
   `Template: ${s.template}\nPhases: ${truncate(s.phases, 500)}\nDuration: ${s.totalDuration || 'TBD'}`
 ).join('\n---\n');
@@ -103,7 +128,7 @@ const ratesSection = capList(merged.rates, 10).map(r =>
   `- ${r.role}: ${r.rate}${r.notes ? ' (' + r.notes + ')' : ''}`
 ).join('\n');
 
-// ---- Boilerplate entries (only the 4 we need, same as v2) ----
+// ---- Boilerplate entries ----
 const firmOverviewBP = findBP('firm overview') || findBP('overview');
 const missionBP = findBP('mission');
 const firmHistoryBP = findBP('firm history') || findBP('history');
@@ -144,9 +169,9 @@ if (merged.hasSupplementary && merged.supplementarySummaries.length > 0) {
 }
 
 // ---- Assemble the full prompt ----
-const prompt = `You are a proposal writer for Outer Image LLC, a Brooklyn-based WBE-certified signage design, fabrication, and implementation studio located at 226 42nd Street, Brooklyn, NY 11232. Phone: 212.661.2124. Website: www.outerimage.com.
+const prompt = `You are a proposal writer for Outer Image LLC, a Brooklyn-based WBE-certified signage design, fabrication, and implementation studio. Design Studio: 161 Water Street, Suite 1533, New York, NY 10038. Fabrication Shop: 226 42nd Street, Brooklyn, NY 11232. Phone: 212.661.2124. Website: www.outerimage.com. Primary contact: ${PRIMARY_CONTACT}.
 
-Generate a complete proposal response for the following RFP using the standard proposal template sections below.
+Generate a complete proposal response for the following RFP using EXACTLY the five-section structure defined below. Match the tone and structure of a polished, design-led studio proposal.
 
 === RFP DATA ===
 Issuer: ${rfp.issuer || 'Unknown'}
@@ -165,10 +190,7 @@ ${supplementarySection}
 --- TEAM BIOS ---
 ${teamSection || 'No team bios available.'}
 
---- CLIENT REFERENCES ---
-${refsSection || 'No references available.'}
-
---- PORTFOLIO PROJECTS ---
+--- PORTFOLIO PROJECTS (already filtered to this RFP's Industry + Service Line; each includes a pre-verified Reference contact) ---
 ${portfolioSection || 'No portfolio projects available.'}
 
 --- PROJECT SCHEDULE TEMPLATES ---
@@ -191,160 +213,99 @@ ${truncate(disputesBP, 300) || 'Not available.'}
 
 === PROPOSAL INSTRUCTIONS ===
 
-Generate the proposal in markdown format. Start with ## 1. Introduction and Executive Summary and continue with the standard sections below. Do NOT generate a cover letter.
+Generate the proposal in markdown with EXACTLY these five "## " sections, in this order and with these exact titles. Do NOT generate a cover letter. Do NOT add any other top-level sections (no separate "Project Overview", no "Proposed Schedule", no standalone "References"). Do NOT use numbered sub-sections like "2.1" or "3.2".
 
-## 1. Introduction and Executive Summary
-Write exactly 3 paragraphs:
-- Paragraph 1: Use the Firm Overview boilerplate as the foundation (adapt, don't copy verbatim). Frame Outer Image's introduction through the lens of the ${serviceLine} service line${industry ? ` and its deep experience in the ${industry} sector` : ''}.
-- Paragraph 2: Expand on Outer Image's capabilities specifically relevant to ${serviceLine} work${industry ? ` for ${industry} clients` : ''}. Emphasize experience, certifications, and team strengths that matter most to ${industry || 'this type of'} client${industry === 'Government' ? ' (e.g., compliance, code requirements, public-facing durability, WBE/MBE certification)' : industry === 'Corporate' ? ' (e.g., brand alignment, aesthetic quality, stakeholder coordination, high-profile environments)' : industry === 'Non-Profit' ? ' (e.g., cost-effectiveness, mission-driven design, community impact, budget sensitivity)' : industry === 'Health' ? ' (e.g., ADA compliance, wayfinding clarity, patient experience, regulatory standards, durability)' : 's'}.
-- Paragraph 3: ONE closing paragraph that references ONLY projects from the PORTFOLIO PROJECTS data above whose Client Tier matches "${industry || 'the RFP sector'}". ONLY mention projects that have a matching Client Tier — do NOT mix sectors. If fewer than 2 matching projects exist, broaden slightly but note the relevance. NEVER mention a client from CLIENT REFERENCES as a project — references and portfolio are separate data sources.
+## Introduction and Executive Summary
+Write a tailored 3-4 paragraph narrative specific to THIS RFP (not boilerplate):
+- Paragraph 1: Address ${rfp.issuer || 'the issuer'} and the "${rfp.projectTitle || 'project'}" directly. Introduce Outer Image as a Brooklyn-based WBE-certified signage studio and frame its fit for this project's ${serviceLine} scope${industry ? ` in the ${industry} sector` : ''}. Adapt the Firm Overview boilerplate — do not copy it verbatim.
+- Paragraph 2 (the value paragraph — fold the former "Value to client" content here): explain the specific value Outer Image brings to this client — capabilities, certifications, and team strengths that matter most to ${industry || 'this type of'} client${industry === 'Government' ? ' (compliance, code requirements, public-facing durability, WBE/MBE certification)' : industry === 'Corporate' ? ' (brand alignment, aesthetic quality, stakeholder coordination, high-profile environments)' : industry === 'Non-Profit' ? ' (cost-effectiveness, mission-driven design, community impact, budget sensitivity)' : industry === 'Health' ? ' (ADA compliance, wayfinding clarity, patient experience, regulatory standards, durability)' : ''}.
+- Paragraph 3: reference ONLY the 1-2 most relevant PORTFOLIO PROJECTS whose Client Tier matches "${industry || 'the RFP sector'}". Do NOT mix sectors; if fewer than 2 matching projects exist, broaden slightly and note the relevance.
+- Optional Paragraph 4: a brief closing statement of commitment to the project.
 
-## 2. Project Overview
-Write 2-3 paragraphs tailored specifically to the RFP issuer explaining why Outer Image is uniquely positioned for this project. Frame the response around Outer Image's ${serviceLine} capabilities${industry ? ` and proven track record with ${industry} clients` : ''}. Reference specific details from the RFP scope of work and any supplementary documents. Address evaluation criteria directly.${industry ? ` Highlight how Outer Image's experience serving ${industry} organizations translates directly to this project's needs.` : ''} Do NOT invent specific internal processes, proprietary methodologies, or named QA/QC procedures. Keep capability claims grounded in the data provided (team experience, portfolio projects, certifications).
+## Company Information
+Present as a FLAT block (no numbered sub-sections). Output these items in order, each as its own line/group:
+- **Company Name:** Outer Image LLC
+- **Design Studio:** 161 Water Street, Suite 1533, New York, NY 10038
+- **Fabrication Shop:** 226 42nd Street, Brooklyn, NY 11232
+- **Primary Contact:** ${PRIMARY_CONTACT}
+- **Company Overview:** one narrative paragraph adapted from the Firm Overview / Firm History / Mission boilerplate (do not copy verbatim).
+- **Key Personnel:** a bullet list, one person per line in "Name: Title" format, drawn ONLY from TEAM BIOS. Lead with Laura Vardanian, then the most relevant members for ${serviceLine}${industry ? ` / ${industry}` : ''} work.
+- **Licensing & Certifications:** state that Outer Image LLC is WBE-certified, plus any certifications that appear in TEAM BIOS. Do NOT invent certifications.
 
-## 3. Corporate Information
-
-### 3.1 Firm History
-Use the Firm History boilerplate. Keep to 1 paragraph.
-
-### 3.2 Office Location
-226 42nd Street, Brooklyn, NY 11232. Mention proximity/accessibility to the project location if known from the RFP or supplementary documents.
-
-### 3.3 Project Team
-List the team members from the bios provided. For each: Name, Title, and a 2-sentence summary of their relevant experience.
-TEAM SELECTION RULES:
-- PRIORITIZE team members whose Service Lines include "${serviceLine}" or whose bios mention experience relevant to ${industry || 'the project sector'}.
-- For ${industry === 'Government' ? 'Government projects, lead with team members who have compliance, code, ADA, or public-sector experience' : industry === 'Corporate' ? 'Corporate projects, lead with team members who have brand, design, or high-profile commercial experience' : industry === 'Non-Profit' ? 'Non-Profit projects, lead with team members who have community, mission-driven, or budget-conscious project experience' : industry === 'Health' ? 'Health projects, lead with team members who have healthcare, ADA, wayfinding, or institutional experience' : 'this project type, lead with the most relevant team members'}.
-- List the Project Manager or Lead first, then the most relevant team members for this service line and industry.
-- When describing each person's experience, emphasize the aspects of their bio that are most relevant to ${serviceLine} work${industry ? ' in the ' + industry + ' sector' : ''}.
-
-### 3.4 Disputes
-Use the Disputes boilerplate. If it says "none", state clearly: "Outer Image LLC has no record of disputes, litigation, or contract terminations."
-
-### 3.5 Mission
-Use the Mission boilerplate. Keep to 1 paragraph.
-
-## 4. Project Approach & Phases
-IMPORTANT: All subsections below must follow the zero-hallucination policy. Write in general professional terms about Outer Image's approach. Do NOT invent specific proprietary methodology names, named internal processes, specific software tools not listed in team bios, or specific procedural steps that are not found in the Airtable data above.
-
-Organize this section into the following project phases. For each phase, write 1-2 paragraphs describing Outer Image's approach:
-
-### 4.1 Design Development
-Describe the design development process — concept creation, stakeholder review, design iteration. Reference the team's capabilities from TEAM BIOS. If supplementary documents include site plans or design briefs, reference them.
-
-### 4.2 Client Review & Approvals
-Describe the stakeholder engagement and approval process. Include how Outer Image manages client feedback cycles, design reviews, and milestone sign-offs.
-
-### 4.3 Fabrication Drawings & Engineering
-Describe the process of translating approved designs into fabrication-ready drawings. ONLY mention software tools that appear in TEAM BIOS (e.g., AutoCAD, Revit). Do NOT add tools not in the data.
-
-### 4.4 Fabrication & Production
-Describe Outer Image's in-house fabrication capabilities at the Brooklyn facility. Reference relevant portfolio project fabrication experience. Mention quality control during production.
-
-### 4.5 Installation & Coordination
-Describe site installation coordination, safety protocols, and coordination with GCs/other contractors. If a GC or other parties are mentioned in supplementary docs, reference them.
-
-### 4.6 Quality Assurance
-Describe QA/QC procedures across all phases. Keep descriptions general — do NOT invent specific process names, checklists, or procedures. Use language like "Outer Image maintains rigorous quality standards throughout the project lifecycle."
-
-## 5. Project Experience
-List up to 5 relevant projects from the portfolio. For each project, use this EXACT format:
+## Experience and Qualifications
+Include EVERY project in the PORTFOLIO PROJECTS list below (up to 5), in the order given. That list has ALREADY been filtered to this RFP's Industry ("${industry || 'any'}") and Service Line ("${serviceLine}") — do NOT add, drop, substitute, or reorder projects. For EACH project, output a bold project-name heading followed by a bullet list, using this EXACT format:
 
 **[Project Name]**
-- **Scope:** [Scope of Services description]
+- **Scope:** [Scope of Services]
 - **Location:** [Location]
 - **Budget:** $[Design Value] (Design) / $[Fabrication Value] (Fabrication)
 - **Timeline:** [Status or timeline info]
-- **Reference:** [Client name, GC if available]
+- **Reference:** [use the project's pre-verified Reference contact EXACTLY as given in the PORTFOLIO PROJECTS data — including "Available upon request" if that is what is provided]
 
 [1-2 sentence description of the project]
 
-IMPORTANT FORMATTING:
-- Bold the project name as a heading
-- Use bullet points (- ) for Scope, Location, Budget, Timeline, Reference
-- End every bullet line with two trailing spaces for markdown line breaks
-- Format dollar amounts as currency with dollar sign and commas (e.g., "$310,000")
-- Separate each project with a blank line
+RULES FOR THIS SECTION:
+- ONLY use projects listed in PORTFOLIO PROJECTS. Never invent or duplicate a project.
+- Use the Reference value already attached to each project. Do NOT invent contact names, emails, or phones, and do NOT swap references between projects.
+- If a field is missing in the data, write "[Not provided]" — do not guess.
+- Bold the project name; use "- " bullets; format dollars as currency (e.g., "$310,000"); end EVERY bullet line with two trailing spaces.
+- The PORTFOLIO PROJECTS list is the authoritative, pre-filtered selection for this Industry and Service Line. Present those projects only — never swap in a project from a different sector or service line.
 
-CRITICAL RULES FOR PROJECT EXPERIENCE:
-- ONLY use projects listed in the PORTFOLIO PROJECTS section above. Do NOT invent, fabricate, or hallucinate any projects.
-- NEVER duplicate a project — each project may appear ONLY ONCE.
-- If a field value is not provided in the portfolio data, write "[Not provided]" — do NOT make up values.
-- PRIORITY ORDER for selecting projects:
-  1. FIRST: Projects matching BOTH Service Line "${serviceLine}" AND Client Tier "${industry || 'any'}"
-  2. SECOND: Projects matching Client Tier "${industry || 'any'}" (any service line)
-  3. THIRD: Projects matching Service Line "${serviceLine}" (any client tier)
-  4. LAST: Any remaining projects to fill up to 5 total
-- The goal is to demonstrate relevant ${industry || 'sector'} experience through project selection.
+## Project Phases
+Describe Outer Image's design-led process in EXACTLY these four phases, in this order. Each phase is a "### " heading (unnumbered) followed by 3-5 "- " bullets describing the activities and deliverables of that phase. Keep all descriptions general and professional — do NOT invent proprietary methodology names, named internal processes, or software tools not found in TEAM BIOS.
 
-## 6. Fee Proposal
-Present the fee proposal as a markdown table. Use the RATE SCHEDULES data to build the table.
+### Discovery & Strategy
+- Bullets: kickoff and stakeholder alignment, site/context review, program and message-schedule needs, code/ADA and brand requirements gathering. Reference any supplementary site or design-brief documents if provided.
 
-### 6.1 Hourly Rate Schedule
-Create a markdown table with these columns:
-| Role | Hourly Rate |
-|------|-------------|
-List each role and rate from the RATE SCHEDULES data. Do NOT invent rates.
+### Concept Design
+- Bullets: design concepts and visual direction, signage families and material studies, preliminary location plans, stakeholder review of concepts.
 
-### 6.2 Project Fee Summary
-If sufficient data exists from RATE SCHEDULES and the RFP scope, present a fee summary table:
-| Phase | Description | Estimated Hours | Fee |
-|-------|-------------|-----------------|-----|
-Include phases like: Design Development, Client Review, Fabrication Drawings, Fabrication, Installation, Project Management.
-IMPORTANT: Do NOT calculate, estimate, or invent any lump-sum project fees or total costs. If rate data is insufficient to build this table, state: "Outer Image will provide a detailed fee proposal upon further discussion of the project scope." Only use hourly rates multiplied by reasonable hour estimates if the RFP provides scope details to base estimates on.
+### Design Development
+- Bullets: refined designs, message schedules and location plans, materials/finishes specification, coordination with the client and (for fabrication scope) constructability review.
 
-## 7. Proposed Schedule
-Create a markdown table with columns: | Phase | Duration | Anticipated Timeline |
-Base this on the schedule template data. Include at minimum: Design Development, Client Review, Fabrication Drawings, Fabrication, Installation.
+### Documentation
+- Bullets: design intent / fabrication-ready documentation, specifications and schedules, permit/code documentation as applicable, hand-off package for fabrication and installation${/Fabrication/i.test(serviceLine) ? ' (and coordination into in-house fabrication at the Brooklyn shop)' : ''}.
 
-## 8. References
-IMPORTANT: Copy the following references block EXACTLY as written below. Do NOT modify, reorder, duplicate, or add to these references. Include them verbatim:
+If PROJECT SCHEDULE TEMPLATES contains usable durations, you MAY add one approximate-duration bullet per phase; otherwise omit timing entirely (do not invent durations).
 
-${preformattedRefs || 'No references available.'}
+## Fee Proposal
+Provide two markdown tables and no invented lump-sum totals.
+
+First, a phase-fee table aligned to the four phases above:
+| Phase | Description | Fee |
+|-------|-------------|-----|
+One row per phase (Discovery & Strategy, Concept Design, Design Development, Documentation). The three columns are DISTINCT — never repeat the Fee text in the Description column:
+- Phase column: the phase name.
+- Description column: a short phrase (5-12 words) summarizing that phase's key deliverables, drawn from the Project Phases section above (e.g. "Stakeholder alignment, site review, and EGD strategy"). Do NOT put pricing or "hourly" text here.
+- Fee column: write "Hourly — billed per rate schedule" (or "To be confirmed upon scope finalization"). Do NOT invent dollar totals unless the RFP scope provides enough detail for an hourly estimate.
+
+Then, an Hourly Rate Schedule table built from RATE SCHEDULES:
+| Position | Rate |
+|----------|------|
+List each role and its hourly rate exactly as given. Do NOT invent rates. If no rate data is available, write: "Outer Image will provide a detailed fee proposal upon further discussion of the project scope."
 
 === ZERO-HALLUCINATION POLICY (APPLIES TO THE ENTIRE PROPOSAL) ===
-These rules override everything else and apply to EVERY section — Introduction, Project Overview, Project Approach, Project Experience, Fee Proposal, and all others.
+These rules override everything else and apply to EVERY section.
 
-1. DATA SOURCES ARE SILOED. Each Airtable section above is a separate, authoritative source:
-   - PORTFOLIO PROJECTS = the ONLY source for project names, descriptions, locations, values, and GCs.
-   - CLIENT REFERENCES = the ONLY source for client contact names, emails, and phones. References are NOT projects — never describe a reference as if it were a completed project.
-   - TEAM BIOS = the ONLY source for team member names, titles, and experience descriptions.
-   - RATE SCHEDULES = the ONLY source for hourly rates and role pricing.
+1. AUTHORITATIVE DATA SOURCES:
+   - PORTFOLIO PROJECTS = the ONLY source for project names, descriptions, locations, values, GCs, and the verified Reference contact attached to each project.
+   - TEAM BIOS = the ONLY source for team member names, titles, certifications, and experience.
+   - RATE SCHEDULES = the ONLY source for hourly rates.
    - BOILERPLATE = the ONLY source for firm overview, mission, history, and disputes language.
-
-2. NEVER CROSS-POLLINATE. If a client name appears in CLIENT REFERENCES but NOT in PORTFOLIO PROJECTS, you MUST NOT describe any project work for that client anywhere in the proposal. A reference is proof that Outer Image has a relationship with that client — it is NOT proof of a specific project, scope, budget, or deliverable.
-
-3. NEVER INVENT. If information is not explicitly provided in the data above, do not create it. This includes:
-   - Project names, scopes, budgets, or descriptions not in PORTFOLIO PROJECTS
-   - Team qualifications, degrees, or past employers not in TEAM BIOS
-   - Client contact details not in CLIENT REFERENCES
-   - Rates not in RATE SCHEDULES
-   - Firm claims not in BOILERPLATE
-   - Software tools not mentioned in TEAM BIOS (do NOT add tools like Rhino, SolidWorks, Bluebeam, etc. unless they appear in the bios)
-   - Lump-sum fees, total project costs, or reimbursable expense amounts (ONLY use hourly rates from RATE SCHEDULES)
-   - Named proprietary methodologies, named QA processes, or named internal procedures (keep process descriptions general and professional)
-
-4. MISSING DATA. When a field in the provided data is empty, null, or absent:
-   - In section 5 Project Experience: write "[Not provided]" as a placeholder
-   - In section 6 Fee Proposal: If no rate schedule data is available, state "Outer Image will provide a detailed fee proposal upon further discussion of project scope" — do NOT invent a fee
-   - In all other sections: omit the detail entirely rather than guessing or filling in a plausible value
-
-5. WHEN IN DOUBT, LEAVE IT OUT. If you are not 100% certain a fact came from the Airtable data above, do not include it. This applies especially to:
-   - Dollar amounts of any kind (fees, budgets, costs) — NEVER estimate or invent dollar figures
-   - Software tool names — ONLY list tools found in TEAM BIOS
-   - Process names or methodology names — keep descriptions general
+2. REFERENCES ARE PRE-MATCHED. Each project's Reference contact has already been verified and joined to that specific project. Use it only on that project, exactly as written. Never move a reference to a different project and never invent one.
+3. NEVER INVENT. Do not create project names, scopes, budgets, team qualifications, contacts, rates, firm claims, software tools (only those in TEAM BIOS), lump-sum fees, or named proprietary methodologies.
+4. MISSING DATA. In Experience, write "[Not provided]" for empty fields. In Fee Proposal, if rate data is missing, use the fallback sentence above. Elsewhere, omit rather than guess.
+5. WHEN IN DOUBT, LEAVE IT OUT — especially dollar amounts, tool names, and process/methodology names.
 
 === FORMATTING RULES ===
-1. Use markdown headings: ## for main sections, ### for subsections
-2. Do NOT wrap the output in code fences (\`\`\`markdown or \`\`\`)
-3. Start the output with ## 1. Introduction and Executive Summary (no cover letter)
-4. Use markdown table syntax for fee proposal and schedule sections (pipes and dashes)
-5. Bold text with **double asterisks**
-6. In section 5 Project Experience, use bullet points (- ) for each field under the bold project name
-7. End EVERY field line with two trailing spaces so markdown renders each on its own line. Format dollar amounts as currency (e.g., "$310,000")
-8. Reference supplementary document details naturally — do NOT just list them
-9. In section 8 References, end EVERY field line with two trailing spaces so each renders on its own line
-10. Total output should be approximately 2,500-4,000 words`;
+1. Use "## " for the five main section headings (exact titles above) and "### " for the four phase headings. Do NOT number the headings yourself.
+2. Do NOT wrap the output in code fences.
+3. Start the output with "## Introduction and Executive Summary" (no cover letter).
+4. Use markdown table syntax (pipes and dashes) for both Fee Proposal tables.
+5. Bold with **double asterisks**.
+6. In Experience and Qualifications, use "- " bullets under each bold project name and end EVERY field line with two trailing spaces. Format dollar amounts as currency.
+7. Reference supplementary document details naturally — do not just list them.
+8. Total output should be approximately 2,200-3,500 words.`;
 
 return [{
   json: {

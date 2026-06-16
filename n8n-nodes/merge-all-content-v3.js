@@ -57,6 +57,7 @@ try {
   portfolio = $('Fetch Portfolio').all().map(i => ({
     project: i.json['Project Name'] || '',
     client: i.json['Client'] || i.json['Client Name'] || '',
+    serviceLine: i.json['Service Line'] || '',
     summary: i.json['Summary'] || '',
     location: i.json['Location'] || '',
     gc: i.json['GC'] || i.json['General Contractor'] || '',

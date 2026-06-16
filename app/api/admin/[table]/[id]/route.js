@@ -27,7 +27,12 @@ export async function PUT(req, { params }) {
 
   try {
     const { fields } = await req.json();
-    const record = await base(tableName).update(params.id, fields);
+    // typecast lets Airtable coerce string inputs (e.g. "125" → currency number,
+    // select option names) so edits to number/currency/select fields persist.
+    const [record] = await base(tableName).update(
+      [{ id: params.id, fields }],
+      { typecast: true }
+    );
     return NextResponse.json({ id: record.id, ...record.fields });
   } catch (err) {
     console.error("Admin update error:", err);

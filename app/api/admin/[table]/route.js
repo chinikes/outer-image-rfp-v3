@@ -49,7 +49,12 @@ export async function POST(req, { params }) {
 
   try {
     const { fields } = await req.json();
-    const record = await base(tableName).create(fields);
+    // typecast lets Airtable coerce string inputs (e.g. "125" → currency number,
+    // select option names) so new records with number/currency/select fields save.
+    const [record] = await base(tableName).create(
+      [{ fields }],
+      { typecast: true }
+    );
     return NextResponse.json({ id: record.id, ...record.fields });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
