@@ -305,15 +305,23 @@ export default function ProposalViewPage() {
     logoImg.src = LOGO_BASE64;
     // Set HTML width/height attributes (not just CSS) so html2canvas captures the
     // logo at the intended size. Logo PNG is cropped (~337x221, ratio 1.525); keep that ratio.
-    logoImg.width = 124;
-    logoImg.height = 81;
-    logoImg.style.width = "124px";
-    logoImg.style.height = "81px";
+    logoImg.width = 84;
+    logoImg.height = 55;
+    logoImg.style.width = "84px";
+    logoImg.style.height = "55px";
     logoImg.style.objectFit = "contain";
     logoImg.style.display = "block";
-    logoImg.style.margin = "0 0 6px 0";
+    logoImg.style.borderBottom = "2px solid #1155cc";
+    logoImg.style.paddingBottom = "3px";
     try { await logoImg.decode(); } catch (e) {}
-    content.appendChild(logoImg);
+    // Logo links to the site (matches the reference); blue underline = the link.
+    const logoLink = document.createElement("a");
+    logoLink.href = "https://www.outerimage.com";
+    logoLink.style.display = "inline-block";
+    logoLink.style.marginBottom = "6px";
+    logoLink.style.textDecoration = "none";
+    logoLink.appendChild(logoImg);
+    content.appendChild(logoLink);
 
     const addressBlock = document.createElement("div");
     addressBlock.style.fontSize = "10pt";
@@ -483,7 +491,7 @@ export default function ProposalViewPage() {
 
     // Proposal letterhead — logo stacked above address (matches Laura's reference)
     html += `<div class="letterhead">`;
-    html += `<img src="${LOGO_BASE64}" alt="Outer Image" width="124" height="81" style="width:93pt;height:61pt;display:block;margin:0;"><br>`;
+    html += `<a href="https://www.outerimage.com" style="text-decoration:none;"><img src="${LOGO_BASE64}" alt="Outer Image" width="84" height="55" style="width:63pt;height:41pt;display:block;margin:0;border-bottom:1.5pt solid #1155cc;padding-bottom:2pt;"></a><br>`;
     html += `<div class="address-block">`;
     html += `Design Studio: 161 Water Street, Suite 1533, New York, NY 10038<br>`;
     html += `Fabrication Shop: 226 42nd Street, Brooklyn, NY 11232<br>`;
