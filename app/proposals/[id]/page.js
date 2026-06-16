@@ -245,6 +245,24 @@ export default function ProposalViewPage() {
     });
   }, []);
 
+  // Load html-docx-js from CDN (same pattern as html2pdf) to build real .docx files.
+  const loadHtmlDocx = useCallback(async () => {
+    return new Promise((resolve) => {
+      if (window.htmlDocx) {
+        resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js";
+      script.onload = () => resolve();
+      script.onerror = () => {
+        console.error("Failed to load html-docx-js");
+        resolve();
+      };
+      document.head.appendChild(script);
+    });
+  }, []);
+
   // Shared helper: convert markdown tables to styled HTML tables for export.
   const convertMarkdownTables = (text, opts = {}) => {
     const { forWord = false } = opts;
@@ -442,7 +460,7 @@ export default function ProposalViewPage() {
     }).save();
   }, [proposal, loadHtml2Pdf, effectiveDeadline]);
 
-  const exportWord = useCallback(() => {
+  const exportWord = useCallback(async () => {
     if (!proposal) return;
 
     const currentSections = parseSections(proposal.generatedDraft);
@@ -485,7 +503,7 @@ export default function ProposalViewPage() {
           <o:AllowPNG/>
         </o:OfficeDocumentSettings>
       </xml><![endif]-->
-      </head><body>
+      </head><body style="font-family:'Inter ExtraLight','Inter',Arial,sans-serif;font-size:10.5pt;color:#333;">
       <div style="mso-element:body">`;
 
     // Proposal letterhead — logo stacked above address (matches Laura's reference)
@@ -546,16 +564,28 @@ export default function ProposalViewPage() {
 
     html += `</div></body></html>`;
 
-    const blob = new Blob([html], { type: "application/msword" });
+    // Generate a real .docx (OOXML) via html-docx-js so Word opens it natively.
+    // Falls back to Word-HTML (.doc) if the library is unavailable, so export never breaks.
+    await loadHtmlDocx();
+    let blob;
+    let ext = "docx";
+    try {
+      if (!window.htmlDocx) throw new Error("html-docx-js not loaded");
+      blob = window.htmlDocx.asBlob(html);
+    } catch (err) {
+      console.error("docx conversion failed; falling back to .doc:", err);
+      blob = new Blob([html], { type: "application/msword" });
+      ext = "doc";
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(proposal.rfpName || "proposal").replace(/[^a-zA-Z0-9]/g, "-")}-draft.doc`;
+    a.download = `${(proposal.rfpName || "proposal").replace(/[^a-zA-Z0-9]/g, "-")}-draft.${ext}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [proposal, effectiveDeadline]);
+  }, [proposal, effectiveDeadline, loadHtmlDocx]);
 
   if (loading) {
     return (
