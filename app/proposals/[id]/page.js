@@ -306,13 +306,11 @@ export default function ProposalViewPage() {
     // Set HTML width/height attributes (not just CSS) so html2canvas captures the
     // logo at the intended size. Logo PNG is cropped (~337x221, ratio 1.525); keep that ratio.
     logoImg.width = 50;
-    logoImg.height = 40;
+    logoImg.height = 46;
     logoImg.style.width = "50px";
-    logoImg.style.height = "40px";
+    logoImg.style.height = "46px";
     logoImg.style.objectFit = "contain";
     logoImg.style.display = "block";
-    logoImg.style.borderBottom = "1.5px solid #1155cc";
-    logoImg.style.paddingBottom = "2px";
     try { await logoImg.decode(); } catch (e) {}
     // Logo links to the site (matches the reference); blue underline = the link.
     const logoLink = document.createElement("a");
@@ -352,10 +350,10 @@ export default function ProposalViewPage() {
     detailsBlock.style.marginBottom = "6px";
     detailsBlock.style.paddingLeft = "24px";
     detailsBlock.style.fontWeight = "200";
-    let detailsHtml = `<div style="font-size:10.5pt;color:#333;margin-bottom:4px;">Project Details</div>`;
-    if (clientName) detailsHtml += `<div style="font-size:10.5pt;color:#333;padding-left:24px;">Client: ${clientName}</div>`;
-    detailsHtml += `<div style="font-size:10.5pt;color:#333;padding-left:24px;">Project: ${projectName}</div>`;
-    if (location) detailsHtml += `<div style="font-size:10.5pt;color:#333;padding-left:24px;">Location: ${location}</div>`;
+    let detailsHtml = `<div style="font-size:10.5pt;color:#333;margin-bottom:12px;">Project Details</div>`;
+    if (clientName) detailsHtml += `<div style="font-size:10.5pt;color:#333;">Client: ${clientName}</div>`;
+    detailsHtml += `<div style="font-size:10.5pt;color:#333;">Project: ${projectName}</div>`;
+    if (location) detailsHtml += `<div style="font-size:10.5pt;color:#333;">Location: ${location}</div>`;
     detailsBlock.innerHTML = detailsHtml;
     content.appendChild(detailsBlock);
 
@@ -363,7 +361,7 @@ export default function ProposalViewPage() {
     dateBlock.style.fontSize = "10.5pt";
     dateBlock.style.color = "#333";
     dateBlock.style.fontWeight = "200";
-    dateBlock.style.paddingLeft = "48px";
+    dateBlock.style.paddingLeft = "24px";
     dateBlock.style.marginTop = "10px";
     dateBlock.style.marginBottom = "20px";
     dateBlock.textContent = `Date: ${today}`;
@@ -468,9 +466,9 @@ export default function ProposalViewPage() {
         .divider { border: none; border-top: 1.5px solid #A0A0A0; margin: 14pt 0 16pt 0; }
         .proposal-heading { font-weight: bold; font-size: 11pt; color: #000; margin: 0 0 16pt 0; }
         .project-details { margin: 0 0 6pt 18pt; font-weight: 200; }
-        .project-details .label { font-size: 10.5pt; color: #333; margin: 0 0 4pt 0; }
-        .project-details .field { font-size: 10.5pt; color: #333; margin: 0 0 2pt 18pt; }
-        .project-date { font-size: 10.5pt; color: #333; margin: 10pt 0 20pt 36pt; font-weight: 200; }
+        .project-details .label { font-size: 10.5pt; color: #333; margin: 0 0 10pt 0; }
+        .project-details .field { font-size: 10.5pt; color: #333; margin: 0 0 2pt 0; }
+        .project-date { font-size: 10.5pt; color: #333; margin: 10pt 0 20pt 18pt; font-weight: 200; }
         h2 { font-family: Inter, Arial, sans-serif; font-size: 12pt; color: #000; font-weight: bold; margin: 24pt 0 8pt 0; border-bottom: none; padding-bottom: 0; }
         h3 { font-family: Inter, Arial, sans-serif; font-size: 11pt; color: #333; font-weight: bold; margin: 14pt 0 4pt 0; }
         h4 { font-family: Inter, Arial, sans-serif; font-size: 11pt; color: #333; font-weight: bold; margin: 10pt 0 4pt 0; }
@@ -491,7 +489,7 @@ export default function ProposalViewPage() {
 
     // Proposal letterhead — logo stacked above address (matches Laura's reference)
     html += `<div class="letterhead">`;
-    html += `<a href="https://www.outerimage.com" style="text-decoration:none;"><img src="${LOGO_BASE64}" alt="Outer Image" width="50" height="40" style="width:37.5pt;height:30pt;display:block;margin:0;border-bottom:1pt solid #1155cc;padding-bottom:2pt;"></a><br>`;
+    html += `<a href="https://www.outerimage.com" style="text-decoration:none;"><img src="${LOGO_BASE64}" alt="Outer Image" width="50" height="46" style="width:37.5pt;height:34.5pt;display:block;margin:0;"></a><br>`;
     html += `<div class="address-block">`;
     html += `Design Studio: 161 Water Street, Suite 1533, New York, NY 10038<br>`;
     html += `Fabrication Shop: 226 42nd Street, Brooklyn, NY 11232<br>`;
