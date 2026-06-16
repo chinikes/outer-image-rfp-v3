@@ -295,13 +295,12 @@ If PROJECT SCHEDULE TEMPLATES contains usable durations, you MAY add one approxi
 ## Fee Proposal
 Provide two markdown tables and no invented lump-sum totals.
 
-First, a phase-fee table aligned to the four phases above:
+First, a fee summary table with EXACTLY two rows (matching the reference format):
 | Phase | Description | Fee |
 |-------|-------------|-----|
-One row per phase (Discovery & Strategy, Concept Design, Design Development, Documentation). The three columns are DISTINCT — never repeat the Fee text in the Description column:
-- Phase column: the phase name.
-- Description column: a short phrase (5-12 words) summarizing that phase's key deliverables, drawn from the Project Phases section above (e.g. "Stakeholder alignment, site review, and EGD strategy"). Do NOT put pricing or "hourly" text here.
-- Fee column: write "Hourly — billed per rate schedule" (or "To be confirmed upon scope finalization"). Do NOT invent dollar totals unless the RFP scope provides enough detail for an hourly estimate.
+- Row 1 — Phase: "All"; Description: a concise one-line summary of the FULL project scope for THIS RFP, drawn from the RFP Scope of Work and key requirements (e.g. "Full environmental graphics and signage scope for the ${rfp.projectTitle || 'project'}"); Fee: "Billed hourly per the rate schedule below".
+- Row 2 — Phase: "**Total Fee**"; Description: leave empty; Fee: "To be confirmed upon scope finalization".
+Do NOT invent dollar totals or lump sums.
 
 Then leave a blank line, output the bold heading **Hourly Rate Schedule** on its own line, leave another blank line, and then output a table built from RATE SCHEDULES with these columns:
 | Position | Hourly Rate |
