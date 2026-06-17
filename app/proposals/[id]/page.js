@@ -277,12 +277,16 @@ export default function ProposalViewPage() {
       ? `padding:6pt 8pt;border:1px solid #999;vertical-align:top;${wordFont}`
       : 'padding:6px 10px;border:1px solid #999;vertical-align:top;';
 
+    // Format inline markdown (bold/italic) inside table cells, e.g. **Total Fee**.
+    const fmtCell = (c) => c.trim()
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
     return text.replace(
       /(?:^|\n)([ \t]*\|[^\n]+\|[ \t]*)\n([ \t]*\|[\s\-:|]+\|[ \t]*)\n((?:[ \t]*\|[^\n]+\|[ \t]*(?:\n|$))+)/g,
       (match, header, separator, body) => {
-        const thCells = header.trim().split("|").filter(c => c.trim()).map(c => `<th style="${thStyle}">${c.trim()}</th>`).join("");
+        const thCells = header.trim().split("|").filter(c => c.trim()).map(c => `<th style="${thStyle}">${fmtCell(c)}</th>`).join("");
         const rows = body.trim().split("\n").map(row => {
-          const cells = row.trim().split("|").filter(c => c.trim()).map(c => `<td style="${tdStyle}">${c.trim()}</td>`).join("");
+          const cells = row.trim().split("|").filter(c => c.trim()).map(c => `<td style="${tdStyle}">${fmtCell(c)}</td>`).join("");
           return `<tr>${cells}</tr>`;
         }).join("");
         return `\n<table style="${tableStyle}"><thead><tr>${thCells}</tr></thead><tbody>${rows}</tbody></table>\n`;
@@ -548,7 +552,10 @@ export default function ProposalViewPage() {
 
         const tableMatch = trimmed.match(/^__TABLE_BLOCK_(\d+)__$/);
         if (tableMatch) {
-          html += tableBlocks[parseInt(tableMatch[1], 10)];
+          // html-docx-js renders consecutive tables flush together; wrap each table
+          // in empty spacer paragraphs so there's a visible gap around it.
+          const spacer = '<p style="margin:0;font-size:11pt;line-height:1.2">&nbsp;</p>';
+          html += spacer + tableBlocks[parseInt(tableMatch[1], 10)] + spacer;
           return;
         }
 
