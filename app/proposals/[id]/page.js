@@ -682,7 +682,7 @@ export default function ProposalViewPage() {
                   const d = new Date(effectiveDeadline);
                   return isNaN(d.getTime())
                     ? effectiveDeadline  // Show raw text if not parseable
-                    : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+                    : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
                 })()}
               </span>
             )}

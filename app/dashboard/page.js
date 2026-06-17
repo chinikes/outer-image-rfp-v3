@@ -310,7 +310,7 @@ export default function DashboardPage() {
               <div>{p.serviceLine ? <ServiceBadge line={p.serviceLine} /> : <span className="text-gray-300 text-[13px]">—</span>}</div>
               <div><StatusBadge status={p.status} /></div>
               <div className="text-[13px] text-gray-600 font-medium">
-                {p.deadline && new Date(p.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {p.deadline && new Date(p.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
               </div>
               <div>
                 {clickable && (
